@@ -1,4 +1,4 @@
- Parrot
+ Parrots
 ========
 
  Introduction
@@ -25,4 +25,4 @@ To report bugs, feature requests or other issues, visit the [issues page]
 This project has been licensed under [GPL-3.0+] License (GNU General Public License v3.0 or higher).
 
 [GPL-3.0+]: ./LICENSE
-[issues page]: https://github.com/potherca/Parrot/issues
+[issues page]: https://github.com/potherca/Parrots/issues
