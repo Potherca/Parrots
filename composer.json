@@ -1,0 +1,34 @@
+{
+    "name": "potherca/parrot",
+    "description": "Simple web service that outputs what it has been given as input.",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Potherca",
+            "email": "potherca@gmail.com",
+            "homepage": "http://pother.ca/",
+            "role": "Kick-Ass Web Developer!"
+        }
+    ],
+    "require": {
+        "php": "~5.5.6",
+        "ext-gd" : "*",
+        "willdurand/negotiation": "~1.3"
+    },
+    "require-dev": {
+        "jakub-onderka/php-parallel-lint": "0.8.*",
+        "phpunit/phpunit": "~4.5",
+        "pdepend/pdepend": "~2.0",
+        "squizlabs/php_codesniffer": "~2.3"
+    },
+    "autoload": {
+        "psr-4" : {
+            "Potherca\\Parrot\\" : "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4" : {
+            "Potherca\\Parrot\\" : "tests/"
+        }
+    }
+}
