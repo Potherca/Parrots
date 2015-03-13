@@ -67,4 +67,72 @@ form button[type="submit"] {
     word-wrap: break-word;
 }
 
+
+.colofon, .colofon a {
+    color: yellow; 
+    background-color: black;
+}
+
+.colofon {
+    border: 1px solid;
+    border-radius: 5em 0 0 5em;
+    bottom: 1em;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 0.65em;
+    font-weight: bold;
+    height: 8.75em;    
+    margin: 0;
+    padding: 0em 1em 0em 8.5em;
+    position: absolute;
+    right: -22.6em;
+    transition: all 1.35s;
+    width: 18em;
+}
+
+.colofon:hover {
+    right: 0;
+}
+
+
+.colofon a {
+    text-decoration: none;
+} 
+
+.colofon a:hover {
+    text-shadow: 0 0 0.3em yellow, 0 0 0.3em yellow, 0 0 0.3em yellow;
+} 
+
+.colofon .logo {
+    background: url(./parrots-logo.svg) no-repeat yellow;
+    background-size: contain;
+    border-radius: 100%;
+    display: block;
+    height: 8em;
+    left: 0.45em;
+    overflow: hidden;
+    position: absolute;
+    top: 0.45em;
+    width: 8em;
+}
+
+.colofon .list {
+    width: 90%;
+    float: right;
+}
+
+.colofon .object {
+    float: left;
+    clear: both;
+    opacity: 0.5;
+}
+.colofon:hover .object {
+    opacity: 0.75;
+}
+
+.colofon .subject {
+    margin: 0;
+    float: right;
+    clear: right;
+}
+
 /*EOF*/
