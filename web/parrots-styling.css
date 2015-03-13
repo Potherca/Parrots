@@ -1,0 +1,70 @@
+html, body {
+    position: relative;
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+section {
+    margin: 0 auto;
+    position: relative;
+    text-align: center;
+    top: 25%;
+}
+
+h1, form {
+    margin: 0;
+    padding: 0;
+    font: bold 6em arial, helvetica, sans-serif;
+}
+
+h1,
+form button[type="submit"],
+form input[name="subject"] {
+    font-size: 6vw;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+form {
+    line-height: 0;
+    display: table;
+    margin: 0 auto;
+}
+
+form button[type="submit"],
+form input[name="subject"] {
+    background-color: white;
+    border: 0;
+    border-bottom: 0.05em solid white;
+    color: black;
+    display: table-cell;
+    outline: none;
+    vertical-align: top;
+}
+
+form input[name="subject"] {
+    height: 100%;
+    padding-right: 1em;
+    text-indent: 1em;
+    width: 60vw;
+}
+
+form:hover button[type="submit"],
+form:hover input[name="subject"],
+form button[type="submit"]:focus,
+form input[name="subject"]:focus {
+    border-color: black;
+}
+
+form button[type="submit"] {
+    cursor: pointer;
+    height: 8vw;
+    width: 8vw;
+}
+
+.subject {
+    word-wrap: break-word;
+}
+
+/*EOF*/
