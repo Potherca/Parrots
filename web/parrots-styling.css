@@ -1,0 +1,138 @@
+html, body {
+    position: relative;
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+section {
+    margin: 0 auto;
+    position: relative;
+    text-align: center;
+    top: 25%;
+}
+
+h1, form {
+    margin: 0;
+    padding: 0;
+    font: bold 6em arial, helvetica, sans-serif;
+}
+
+h1,
+form button[type="submit"],
+form input[name="subject"] {
+    font-size: 6vw;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+form {
+    line-height: 0;
+    display: table;
+    margin: 0 auto;
+}
+
+form button[type="submit"],
+form input[name="subject"] {
+    background-color: white;
+    border: 0;
+    border-bottom: 0.05em solid white;
+    color: black;
+    display: table-cell;
+    outline: none;
+    vertical-align: top;
+}
+
+form input[name="subject"] {
+    height: 100%;
+    padding-right: 1em;
+    text-indent: 1em;
+    width: 60vw;
+}
+
+form:hover button[type="submit"],
+form:hover input[name="subject"],
+form button[type="submit"]:focus,
+form input[name="subject"]:focus {
+    border-color: black;
+}
+
+form button[type="submit"] {
+    cursor: pointer;
+    height: 8vw;
+    width: 8vw;
+}
+
+.subject {
+    word-wrap: break-word;
+}
+
+
+.colofon, .colofon a {
+    color: yellow; 
+    background-color: black;
+}
+
+.colofon {
+    border: 1px solid;
+    border-radius: 5em 0 0 5em;
+    bottom: 1em;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 0.65em;
+    font-weight: bold;
+    height: 8.75em;    
+    margin: 0;
+    padding: 0em 1em 0em 8.5em;
+    position: absolute;
+    right: -22.6em;
+    transition: all 1.35s;
+    width: 18em;
+}
+
+.colofon:hover {
+    right: 0;
+}
+
+
+.colofon a {
+    text-decoration: none;
+} 
+
+.colofon a:hover {
+    text-shadow: 0 0 0.3em yellow, 0 0 0.3em yellow, 0 0 0.3em yellow;
+} 
+
+.colofon .logo {
+    background: url(./parrots-logo.svg) no-repeat yellow;
+    background-size: contain;
+    border-radius: 100%;
+    display: block;
+    height: 8em;
+    left: 0.45em;
+    overflow: hidden;
+    position: absolute;
+    top: 0.45em;
+    width: 8em;
+}
+
+.colofon .list {
+    width: 90%;
+    float: right;
+}
+
+.colofon .object {
+    float: left;
+    clear: both;
+    opacity: 0.5;
+}
+.colofon:hover .object {
+    opacity: 0.75;
+}
+
+.colofon .subject {
+    margin: 0;
+    float: right;
+    clear: right;
+}
+
+/*EOF*/

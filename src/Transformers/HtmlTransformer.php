@@ -2,11 +2,22 @@
 
 namespace Potherca\Parrots\Transformers;
 
-class HtmlTransformer
+use Exception;
+use PHPTAL;
+
+class HtmlTransformer implements TransformerInterface
 {
+    /** @var PHPTAL */
+    private $m_oTemplate;
+
+    final public function setTemplate(PHPTAL $p_oTemplate)
+    {
+        $this->m_oTemplate = $p_oTemplate;
+    }
+
     final public function transform(array $p_aData)
     {
-        $sTemplate = $this->buildTemplate();
+        $oTemplate = $this->m_oTemplate;
 
         $sPrefix = '';
         $sSubject = '';
@@ -29,46 +40,17 @@ class HtmlTransformer
             $sSubject = $p_aData['subject'];
         }
 
-        return sprintf(
-            $sTemplate,
-            $sBackgroundColor,
-            $sColor,
-            htmlentities($sPrefix),
-            htmlentities($sSubject)
-        );
-    }
+        $oTemplate->set('sBackgroundColor', $sBackgroundColor);
+        $oTemplate->set('sColor', $sColor);
+        $oTemplate->set('sPrefix', $sPrefix);
+        $oTemplate->set('sSubject', $sSubject);
 
-    /**
-     * @return string
-     */
-    private function buildTemplate()
-    {
-        $sTemplate = <<<HTML
-<!DOCTYPE html><html>
-<style>
-    html, body {
-        background-color: %s;
-        color: %s;
-        position: relative;
-        text-transform: uppercase;
-        height: 100%%;
-    }
-
-    h1 {
-        font: bold 6em arial, helvetica, sans-serif;
-        margin: 0;
-        position: absolute;
-        text-align: center;
-        top: 50%%;
-        transform: translateY(-50%%);
-        width: 100%%;
-    }
-</style>
-<h1 class="prefix">%s <span class="subject">%s</span></h1>
-</html>
-HTML;
-
-        return $sTemplate;
+        try {
+            $result = $oTemplate->execute();
+        } catch (Exception $e) {
+            $result = 'ERROR: ' . $e->getMessage();
+        }
+        return $result;
     }
 }
 
