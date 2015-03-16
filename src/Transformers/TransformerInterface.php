@@ -2,7 +2,13 @@
 
 namespace Potherca\Parrots\Transformers;
 
-interface TransformerInterface
+use Potherca\Parrots\DataInterface;
+
+interface TransformerInterface extends DataInterface
 {
-    public function transform(array $p_aData);
+    //////////////////////////////// PUBLIC API \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    /**
+     * @return string
+     */
+    public function transform();
 }

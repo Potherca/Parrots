@@ -4,8 +4,9 @@ namespace Potherca\Parrots\Transformers;
 
 use Exception;
 use PHPTAL;
+use Potherca\Parrots\AbstractData;
 
-class HtmlTransformer implements TransformerInterface
+class HtmlTransformer extends AbstractData implements TransformerInterface
 {
     /** @var PHPTAL */
     private $m_oTemplate;
@@ -15,35 +16,15 @@ class HtmlTransformer implements TransformerInterface
         $this->m_oTemplate = $p_oTemplate;
     }
 
-    final public function transform(array $p_aData)
+    final public function transform()
     {
         $oTemplate = $this->m_oTemplate;
 
-        $sPrefix = '';
-        $sSubject = '';
-        $sColor = 'black';
-        $sBackgroundColor = 'white';
-
-        if (isset($p_aData['color'])) {
-            $sColor = $p_aData['color'];
-        }
-
-        if (isset($p_aData['background-color'])) {
-            $sBackgroundColor = $p_aData['background-color'];
-        }
-
-        if (isset($p_aData['prefix'])) {
-            $sPrefix = $p_aData['prefix'];
-        }
-
-        if (isset($p_aData['subject'])) {
-            $sSubject = $p_aData['subject'];
-        }
-
-        $oTemplate->set('sBackgroundColor', $sBackgroundColor);
-        $oTemplate->set('sColor', $sColor);
-        $oTemplate->set('sPrefix', $sPrefix);
-        $oTemplate->set('sSubject', $sSubject);
+        $oTemplate->set('sBackgroundColor', $this->getBackgroundColor());
+        $oTemplate->set('sColor', $this->getColor());
+        $oTemplate->set('sPrefix', $this->getPrefix());
+        $oTemplate->set('sSubject', $this->getSubject());
+        $oTemplate->set('sText', $this->getText());
 
         try {
             $result = $oTemplate->execute();
