@@ -5,9 +5,12 @@ namespace Potherca\Parrots;
 use Negotiation\FormatNegotiator;
 use PHPTAL;
 use Potherca\Parrots\Transformers\HtmlTransformer;
+use Potherca\Parrots\Transformers\ImageTransformer;
 use Potherca\Parrots\Transformers\JsonTransformer;
 use Potherca\Parrots\Transformers\TextTransformer;
 use Potherca\Parrots\Transformers\TransformerInterface;
+use Potherca\Parrots\Utilities\ColorConverter;
+use Potherca\Parrots\Utilities\TextSplitter;
 
 require '../vendor/autoload.php';
 
@@ -35,8 +38,10 @@ $oTransformer = getTransformerFor($oParrot->getType());
 $oParrot->setTransformer($oTransformer);
 
 /* Send Output from Parrot */
+
+$sOutput = $oParrot->parrot();
 header('Content-Type: ' . $oParrot->getType(), true, 200);
-echo $oParrot->parrot();
+die($sOutput);
 
 /*EOF*/
 
@@ -53,6 +58,12 @@ function getTransformerFor($sType)
         case 'application/json':
         case 'text/javascript':
             $oTransformer = new JsonTransformer();
+            break;
+
+        case 'image/png':
+            $oTransformer = new ImageTransformer();
+            $oTransformer->setColorConverter(new ColorConverter());
+            $oTransformer->setTextSplitter(new TextSplitter());
             break;
 
         case 'text/html':

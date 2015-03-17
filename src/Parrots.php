@@ -13,6 +13,7 @@ class Parrots extends AbstractData
     private $m_aSupportedExtensions = array(
         'html' => 'text/html',
         'json' => 'application/json',
+        'png' => 'image/png',
         'txt' => 'text/plain',
     );
 
