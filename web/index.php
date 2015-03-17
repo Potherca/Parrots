@@ -66,19 +66,16 @@ function getTransformerFor($sType)
             $oTransformer->setTextSplitter(new TextSplitter());
             break;
 
-        case 'text/html':
-            $sTemplatePath = __DIR__ . '/../src/Templates/template.html';
-            $oTemplate = new PHPTAL($sTemplatePath);
-            $oTransformer = new HtmlTransformer();
-            $oTransformer->setTemplate($oTemplate);
-            break;
-
         case 'text/plain':
             $oTransformer = new TextTransformer();
             break;
 
+        case 'text/html':
         default:
-            throw new \Exception('Unsupported type "' . $sType . '"');
+            $sTemplatePath = __DIR__ . '/../src/Templates/template.html';
+            $oTemplate = new PHPTAL($sTemplatePath);
+            $oTransformer = new HtmlTransformer();
+            $oTransformer->setTemplate($oTemplate);
             break;
     }
 
