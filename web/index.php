@@ -15,30 +15,33 @@ use Potherca\Parrots\Utilities\TextSplitter;
 require '../vendor/autoload.php';
 
 /* Get Config from file */
-$sDomain = $_SERVER['HTTP_HOST'];
+if (isset($_SERVER['HTTP_HOST'])) {
+    $sDomain = $_SERVER['HTTP_HOST'];
+} else {
+    $sDomain = 'localhost';
+}
 $sConfigFile = getConfigFileForDomain($sDomain);
 $aData = getDataFromConfigFile($sConfigFile);
 
 /* Get Type from HEADER */
 if (isset($_SERVER['HTTP_ACCEPT'])) {
     $oNegotiator = new FormatNegotiator();
-    $aData['type'] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
+    $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
 }
 
 /* Get Subject from GET parameter */
-if (empty($aData['subject']) && isset($_GET['subject'])) {
-    $aData['subject'] = $_GET['subject'];
+if (empty($aData[Parrots::PROPERTY_SUBJECT]) && isset($_GET[Parrots::PROPERTY_SUBJECT])) {
+    $aData[Parrots::PROPERTY_SUBJECT] = $_GET[Parrots::PROPERTY_SUBJECT];
 }
 
-/* Feed the Parrot data*/
+/* Feed Data to the Parrot */
 $oParrot = new Parrots($aData);
 
 /* Feed Transformer to Parrot */
 $oTransformer = getTransformerFor($oParrot->getType());
 $oParrot->setTransformer($oTransformer);
 
-/* Send Output from Parrot */
-
+/* Send Output from Parrot to the Browser*/
 $sOutput = $oParrot->parrot();
 header('Content-Type: ' . $oParrot->getType(), true, 200);
 die($sOutput);
@@ -95,18 +98,18 @@ function getDataFromConfigFile($sConfigFile)
         $aData = json_decode($sConfig, true);
         if ($aData === null) {
             $aData = [
-                'background-color' => 'crimson',
-                'color' => 'white',
-                'prefix' => 'CONFIG PARSE ERROR:',
-                'subject' => json_last_error_msg()
+                Parrots::PROPERTY_BACKGROUND_COLOR => 'crimson',
+                Parrots::PROPERTY_COLOR => 'white',
+                Parrots::PROPERTY_PREFIX => 'CONFIG PARSE ERROR:',
+                Parrots::PROPERTY_SUBJECT => json_last_error_msg()
             ];
         }
     } else {
         $aData = [
-            'background-color' => 'crimson',
-            'color' => 'white',
-            'prefix' => 'CONFIG FILE ERROR:',
-            'subject' => 'File "' . $sConfigFile . '" does not exist',
+            Parrots::PROPERTY_BACKGROUND_COLOR => 'crimson',
+            Parrots::PROPERTY_COLOR => 'white',
+            Parrots::PROPERTY_PREFIX => 'CONFIG FILE ERROR:',
+            Parrots::PROPERTY_SUBJECT => 'File "' . $sConfigFile . '" does not exist',
         ];
     }
 
@@ -122,11 +125,8 @@ function getConfigFileForDomain($sDomain)
 {
     if (file_exists('../config/' . $sDomain . '.json')) {
         $sConfigFile = '../config/' . $sDomain . '.json';
-
-        return $sConfigFile;
     } else {
         $sConfigFile = '../config/default.json';
-
-        return $sConfigFile;
     }
+    return $sConfigFile;
 }
