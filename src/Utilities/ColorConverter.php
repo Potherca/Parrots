@@ -4,7 +4,7 @@ namespace Potherca\Parrots\Utilities;
 
 class ColorConverter
 {
-    private $m_aColorNames  =  [ 
+    private $m_aColorNames  =  [
         'aliceblue' => ['red' => 0xF0, 'green' => 0xF8, 'blue' => 0xFF],
         'antiquewhite' => ['red' => 0xFA, 'green' => 0xEB, 'blue' => 0xD7],
         'aqua' => ['red' => 0x00, 'green' => 0xFF, 'blue' => 0xFF],
@@ -137,7 +137,7 @@ class ColorConverter
         'turquoise' => ['red' => 0x40, 'green' => 0xE0, 'blue' => 0xD0],
         'violet' => ['red' => 0xEE, 'green' => 0x82, 'blue' => 0xEE],
         'wheat' => ['red' => 0xF5, 'green' => 0xDE, 'blue' => 0xB3],
-        'white' => ['red' => 0xFF, 'green' => 0xFF, 'blue' => 0xFF], 
+        'white' => ['red' => 0xFF, 'green' => 0xFF, 'blue' => 0xFF],
         'whitesmoke' => ['red' => 0xF5, 'green' => 0xF5, 'blue' => 0xF5],
         'yellow' => ['red' => 0xFF, 'green' => 0xFF, 'blue' => 0x00],
         'yellowgreen' => ['red' => 0x9A, 'green' => 0xCD, 'blue' => 0x32]
@@ -154,7 +154,7 @@ class ColorConverter
             'blue' => 0x00,
         ];
     
-        if(array_key_exists($p_sColor, $this->m_aColorNames)) {
+        if (array_key_exists($p_sColor, $this->m_aColorNames)) {
             // Named Color
             $aColors = $this->m_aColorNames[$p_sColor];
         } elseif (preg_match('/#?[a-z0-9]{3}/i', $p_sColor) === 1) {
@@ -163,7 +163,7 @@ class ColorConverter
         } elseif (preg_match('/#?[a-z0-9]{6}/i', $p_sColor) === 1) {
             // HEX
             list($aColors['red'], $aColors['green'], $aColors['blue']) = sscanf(ltrim($p_sColor), '%2x%2x%2x');
-        } elseif(preg_match('/rgba?\\([a-fx0-9%]\\)/i') === 1) {
+        } elseif (preg_match('/rgba?\\([a-fx0-9%]\\)/i') === 1) {
             // RGB
             throw new \Exception('RGB values are not (yet) supported');
         } else {
