@@ -29,9 +29,18 @@ if (isset($_SERVER['HTTP_ACCEPT'])) {
     $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
 }
 
-/* Get Subject from GET parameter */
-if (empty($aData[Parrots::PROPERTY_SUBJECT]) && isset($_GET[Parrots::PROPERTY_SUBJECT])) {
-    $aData[Parrots::PROPERTY_SUBJECT] = $_GET[Parrots::PROPERTY_SUBJECT];
+
+    
+/* Get Subject from URL parameter */
+if (empty($aData[Parrots::PROPERTY_SUBJECT])) {
+    if(isset($_SERVER['PATH_INFO'])) {
+        /* Strip leading slash */
+        $aData[Parrots::PROPERTY_SUBJECT] = substr($_SERVER['PATH_INFO'], 1);
+    }
+
+    if(isset($_GET[Parrots::PROPERTY_SUBJECT])) {
+        $aData[Parrots::PROPERTY_SUBJECT] = $_GET[Parrots::PROPERTY_SUBJECT];
+    }
 }
 
 /* Construct the site URL */
