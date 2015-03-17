@@ -136,4 +136,9 @@ form button[type="submit"] {
     clear: right;
 }
 
+.emoji {
+    height: 1em;
+    height: 6vw;
+    vertical-align: middle;
+}
 /*EOF*/
