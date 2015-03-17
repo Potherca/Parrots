@@ -34,6 +34,9 @@ if (empty($aData[Parrots::PROPERTY_SUBJECT]) && isset($_GET[Parrots::PROPERTY_SU
     $aData[Parrots::PROPERTY_SUBJECT] = $_GET[Parrots::PROPERTY_SUBJECT];
 }
 
+/* Construct the site URL */
+$aData[Parrots::PROPERTY_URL] = $_SERVER['REQUEST_SCHEME'] . '://' . $sDomain;
+
 /* Feed Data to the Parrot */
 $oParrot = new Parrots($aData);
 
