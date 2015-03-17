@@ -19,7 +19,7 @@ class TextSplitter
     /** @var int */
     private $m_iLineLength = 0;
 
-    function split($p_sText)
+    final public function split($p_sText)
     {
         $this->parse($p_sText);
 
@@ -71,7 +71,11 @@ class TextSplitter
 
     private function calculateAverageLineLength()
     {
-        $this->m_iLineLength = (int) ceil($this->m_iWordsPerLine * $this->m_iCharactersPerWord + ($this->m_iWordsPerLine - 1));
+        $this->m_iLineLength = (int) ceil(
+            $this->m_iWordsPerLine
+            * $this->m_iCharactersPerWord
+            + ($this->m_iWordsPerLine - 1)
+        );
     }
 
     private function splitTextToWords($p_sText)
@@ -89,8 +93,7 @@ class TextSplitter
 
         while ($this->containsWords($aWords)) {
             $sLine = '';
-            while (
-                $this->containsWords($aWords)
+            while ($this->containsWords($aWords)
                 && $this->containsLessWordsThanAverage($sLine)
             ) {
                 $sLine .= array_shift($aWords) . ' ';
