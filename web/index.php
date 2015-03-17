@@ -5,97 +5,131 @@ namespace Potherca\Parrots;
 use Negotiation\FormatNegotiator;
 use PHPTAL;
 use Potherca\Parrots\Transformers\HtmlTransformer;
+use Potherca\Parrots\Transformers\ImageTransformer;
 use Potherca\Parrots\Transformers\JsonTransformer;
 use Potherca\Parrots\Transformers\TextTransformer;
+use Potherca\Parrots\Transformers\TransformerInterface;
+use Potherca\Parrots\Utilities\ColorConverter;
+use Potherca\Parrots\Utilities\TextSplitter;
 
 require '../vendor/autoload.php';
 
-$aSupportedExtensions = array(
-    'html' => 'text/html',
-    'json' => 'application/json',
-    'txt' => 'text/plain',
-);
-
+/* Get Config from file */
 $sDomain = $_SERVER['HTTP_HOST'];
-$sType = 'text/html';
-$sSubject = null;
+$sConfigFile = getConfigFileForDomain($sDomain);
+$aData = getDataFromConfigFile($sConfigFile);
 
+/* Get Type from HEADER */
 if (isset($_SERVER['HTTP_ACCEPT'])) {
     $oNegotiator = new FormatNegotiator();
-    $sType = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
+    $aData['type'] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
 }
 
-if (isset($_GET['subject'])) {
-    $sSubject = $_GET['subject'];
-
-    $aParts = explode('.', $sSubject);
-    $iCount = count($aParts);
-    if ($iCount > 1
-        && in_array($aParts[$iCount-1], array_keys($aSupportedExtensions))
-    ) {
-        $sType = $aSupportedExtensions[array_pop($aParts)];
-        $sSubject = implode('.', $aParts);
-    }
+/* Get Subject from GET parameter */
+if (empty($aData['subject']) && isset($_GET['subject'])) {
+    $aData['subject'] = $_GET['subject'];
 }
 
-if (file_exists('../config/' . $sDomain . '.json')) {
-    $sConfigFile = '../config/' . $sDomain . '.json';
-} else {
-    $sConfigFile = '../config/default.json';
-}
+/* Feed the Parrot data*/
+$oParrot = new Parrots($aData);
 
-if (file_exists($sConfigFile) === false) {
-    $aData = [
-        'background-color' => 'crimson',
-        'color' => 'white',
-        'prefix' => 'CONFIG FILE ERROR:',
-    ];
-    $sSubject = 'File ' . $sConfigFile . ' does not exist';
-} else {
-    $sConfig = file_get_contents($sConfigFile);
-    $aData = json_decode($sConfig, true);
-}
+/* Feed Transformer to Parrot */
+$oTransformer = getTransformerFor($oParrot->getType());
+$oParrot->setTransformer($oTransformer);
 
-if (is_array($aData) === false) {
-    $aData = [
-        'background-color' => 'crimson',
-        'color' => 'white',
-        'prefix' => 'JSON CONFIG ERROR:',
-        'subject' => json_last_error_msg()
-    ];
-} elseif ($sSubject !== null) {
-    $aData['subject'] = $sSubject;
-} else {
-    // All done.
-}
+/* Send Output from Parrot */
 
-$aData['text'] = $aData['prefix'] . ' ' . $aData['subject'];
-
-switch ($sType) {
-    case 'application/json':
-    case 'text/javascript':
-        $oTransformer = new JsonTransformer();
-        break;
-
-    case 'text/html':
-        $sTemplatePath = __DIR__ . '/../src/Templates/template.html';
-        $oTemplate = new PHPTAL($sTemplatePath);
-        $oTransformer = new HtmlTransformer();
-        $oTransformer->setTemplate($oTemplate);
-        break;
-
-    case 'text/plain':
-        $oTransformer = new TextTransformer();
-        break;
-
-    default:
-        throw new \Exception('Unsupported type "' . $sType . '"');
-        break;
-}
-
-$sData = $oTransformer->transform($aData);
-
-header('Content-Type: ' . $sType, true, 200);
-echo $sData;
+$sOutput = $oParrot->parrot();
+header('Content-Type: ' . $oParrot->getType(), true, 200);
+die($sOutput);
 
 /*EOF*/
+
+/**
+ * @param $sType
+ *
+ * @return TransformerInterface
+ *
+ * @throws \Exception
+ */
+function getTransformerFor($sType)
+{
+    switch ($sType) {
+        case 'application/json':
+        case 'text/javascript':
+            $oTransformer = new JsonTransformer();
+            break;
+
+        case 'image/png':
+            $oTransformer = new ImageTransformer();
+            $oTransformer->setColorConverter(new ColorConverter());
+            $oTransformer->setTextSplitter(new TextSplitter());
+            break;
+
+        case 'text/html':
+            $sTemplatePath = __DIR__ . '/../src/Templates/template.html';
+            $oTemplate = new PHPTAL($sTemplatePath);
+            $oTransformer = new HtmlTransformer();
+            $oTransformer->setTemplate($oTemplate);
+            break;
+
+        case 'text/plain':
+            $oTransformer = new TextTransformer();
+            break;
+
+        default:
+            throw new \Exception('Unsupported type "' . $sType . '"');
+            break;
+    }
+
+    return $oTransformer;
+}
+
+/**
+ * @param $sConfigFile
+ *
+ * @return array
+ *
+ */
+function getDataFromConfigFile($sConfigFile)
+{
+    if (file_exists($sConfigFile)) {
+        $sConfig = file_get_contents($sConfigFile);
+        $aData = json_decode($sConfig, true);
+        if ($aData === null) {
+            $aData = [
+                'background-color' => 'crimson',
+                'color' => 'white',
+                'prefix' => 'CONFIG PARSE ERROR:',
+                'subject' => json_last_error_msg()
+            ];
+        }
+    } else {
+        $aData = [
+            'background-color' => 'crimson',
+            'color' => 'white',
+            'prefix' => 'CONFIG FILE ERROR:',
+            'subject' => 'File "' . $sConfigFile . '" does not exist',
+        ];
+    }
+
+    return $aData;
+}
+
+/**
+ * @param $sDomain
+ *
+ * @return string
+ */
+function getConfigFileForDomain($sDomain)
+{
+    if (file_exists('../config/' . $sDomain . '.json')) {
+        $sConfigFile = '../config/' . $sDomain . '.json';
+
+        return $sConfigFile;
+    } else {
+        $sConfigFile = '../config/default.json';
+
+        return $sConfigFile;
+    }
+}

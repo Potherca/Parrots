@@ -2,22 +2,13 @@
 
 namespace Potherca\Parrots\Transformers;
 
-class TextTransformer
+use Potherca\Parrots\AbstractData;
+
+class TextTransformer extends AbstractData implements TransformerInterface
 {
-    final public function transform(array $p_aData)
+    final public function transform()
     {
-        $sPrefix = '';
-        $sSubject = '';
-
-        if (isset($p_aData['prefix'])) {
-            $sPrefix = $p_aData['prefix'];
-        }
-
-        if (isset($p_aData['subject'])) {
-            $sSubject = $p_aData['subject'];
-        }
-
-        return $sPrefix . ' ' . $sSubject;
+        return $this->getText();
     }
 }
 

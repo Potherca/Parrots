@@ -2,28 +2,17 @@
 
 namespace Potherca\Parrots\Transformers;
 
-class JsonTransformer
+use Potherca\Parrots\AbstractData;
+
+class JsonTransformer extends AbstractData implements TransformerInterface
 {
-    final public function transform(array $p_aData)
+    final public function transform()
     {
-        $sPrefix = '';
-        $sSubject = '';
-
-        if (isset($p_aData['prefix'])) {
-            $sPrefix = $p_aData['prefix'];
-        }
-
-        if (isset($p_aData['subject'])) {
-            $sSubject = $p_aData['subject'];
-        }
-
-        unset($p_aData['prefix'], $p_aData['subject']);
-
         $aData = array(
             'message' => 'ok',
             'status' => 200,
             'data' => array(
-                'text' => $sPrefix . ' ' . $sSubject,
+                'text' => $this->getText(),
             ),
         );
 
