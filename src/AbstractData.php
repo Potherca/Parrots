@@ -10,6 +10,7 @@ abstract class AbstractData implements DataInterface
     const PROPERTY_PREFIX = 'prefix';
     const PROPERTY_BACKGROUND_COLOR = 'background-color';
     const PROPERTY_COLOR = 'color';
+    const PROPERTY_URL = 'url';
 
     /** @var string */
     protected $m_sBackgroundColor = 'white';
@@ -21,6 +22,8 @@ abstract class AbstractData implements DataInterface
     protected $m_sSubject = '';
     /** @var string */
     protected $m_sType = 'text/plain';
+    /** @var string */
+    protected $m_sUrl = 'http://localhost';
 
     //////////////////////////// SETTERS AND GETTERS \\\\\\\\\\\\\\\\\\\\\\\\\\\
     /** @return string */
@@ -59,6 +62,12 @@ abstract class AbstractData implements DataInterface
         return $this->m_sType;
     }
 
+    /** @return string */
+    public function getUrl()
+    {
+        return $this->m_sUrl;
+    }
+
     //////////////////////////////// PUBLIC API \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     final public function setFromArray(array $p_aData)
     {
@@ -80,6 +89,10 @@ abstract class AbstractData implements DataInterface
 
         if (isset($p_aData[self::PROPERTY_TYPE])) {
             $this->m_sType = $p_aData[self::PROPERTY_TYPE];
+        }
+
+        if (isset($p_aData[self::PROPERTY_URL])) {
+            $this->m_sUrl = $p_aData[self::PROPERTY_URL];
         }
     }
 }

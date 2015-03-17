@@ -25,6 +25,7 @@ class HtmlTransformer extends AbstractData implements TransformerInterface
         $oTemplate->set('sPrefix', $this->getPrefix());
         $oTemplate->set('sSubject', $this->getSubject());
         $oTemplate->set('sText', $this->getText());
+        $oTemplate->set('sUrl', $this->getUrl());
 
         try {
             $result = $oTemplate->execute();

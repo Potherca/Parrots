@@ -48,6 +48,7 @@ class Parrots extends AbstractData
             self::PROPERTY_PREFIX => $this->getPrefix(),
             self::PROPERTY_SUBJECT => $this->getSubject(),
             self::PROPERTY_TYPE => $this->getType(),
+            self::PROPERTY_URL => $this->getUrl(),
         ]);
         $sResult = $transformer->transform();
 
