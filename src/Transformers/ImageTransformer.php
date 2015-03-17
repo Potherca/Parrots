@@ -16,7 +16,8 @@ class ImageTransformer extends AbstractData implements TransformerInterface
     private $m_oColorConverter;
     /* @var TextSplitter */
     private $m_oTextSplitter;
-       final public function setColorConverter(ColorConverter $p_oColorConverter)
+
+    final public function setColorConverter(ColorConverter $p_oColorConverter)
     {
         $this->m_oColorConverter = $p_oColorConverter;
     }
@@ -41,14 +42,14 @@ class ImageTransformer extends AbstractData implements TransformerInterface
 
     final public function createImage($p_sText, $p_aColor, $p_aBackgroundColor)
     {
-        
+
         $sText = strtoupper($p_sText);
-        
+
         $aLines = explode("\n", $sText);
         $iLines = count($aLines);
-        
+
         $iLongestLine = 0;
-        foreach($aLines as $t_sLine) {
+        foreach ($aLines as $t_sLine) {
             $iLineLength = strlen($t_sLine);
             if ($iLineLength > $iLongestLine) {
                 $iLongestLine = $iLineLength;
@@ -62,17 +63,13 @@ class ImageTransformer extends AbstractData implements TransformerInterface
         $this->m_rImage = imagecreatetruecolor($iWidth, $iHeight);
 
         imagealphablending($this->m_rImage, false);
-        imagefilledrectangle($this->m_rImage
-            , 0, 0
-            , $iWidth, $iHeight
-            , imagecolorallocatealpha(
-                $this->m_rImage,
-                $p_aBackgroundColor['red'],
-                $p_aBackgroundColor['green'],
-                $p_aBackgroundColor['blue'],
-                1
-            )
-        );
+        imagefilledrectangle($this->m_rImage, 0, 0, $iWidth, $iHeight, imagecolorallocatealpha(
+            $this->m_rImage,
+            $p_aBackgroundColor['red'],
+            $p_aBackgroundColor['green'],
+            $p_aBackgroundColor['blue'],
+            1
+        ));
         imagealphablending($this->m_rImage, true);
 
         $iColor = imagecolorallocatealpha(
@@ -85,11 +82,11 @@ class ImageTransformer extends AbstractData implements TransformerInterface
 
         $box = new Box($this->m_rImage);
         $box->setFontFace(__DIR__ . '/../../fonts/OpenSans-Bold.ttf');
-        //$box->setFontColor(new Color(255, 75, 140));
+        //@TODO: $box->setFontColor(new Color(255, 75, 140));
         //$box->setTextShadow(new Color(0, 0, 0, 50), 2, 2);
-        
+
         $box->setFontSize($iFontSize);
-        
+
         $box->setBox(0, 0, $iWidth, $iHeight);
         $box->setTextAlign('center', 'center');
         $box->draw($sText);
@@ -122,10 +119,11 @@ class ImageTransformer extends AbstractData implements TransformerInterface
 
         ob_start();
         imagesavealpha($this->m_rImage, true);
-        call_user_func('image' . substr($this->getType(), strpos($this->getType(), '/')+1)
-            , $this->m_rImage
-            , null// if filename is include an actual file is created
-            , $this->getQuality()
+        call_user_func(
+            'image' . substr($this->getType(), strpos($this->getType(), '/')+1),
+            $this->m_rImage,
+            null, // if filename is include an actual file is created
+            $this->getQuality()
         );
         $sImage = ob_get_clean();
 

@@ -3,12 +3,13 @@
 
 <meta charset="utf-8" />
 
+<meta name="description" content="${sText}" />
+
 <meta property="og:title" content="${sText}" />
 <meta property="og:description" content="${sText}" />
-<meta property="og:image" content="/${php:urlencode(sText)}.png"/>
+<meta property="og:image" content="${sUrl}/${php:rawurlencode(sText)}.png"/>
+<meta property="og:url" content="${sUrl}/${php:rawurlencode(sText)}"/>
 <meta property="og:type" content="article" />
-
-<meta name="Description" content="${sText}" />
  
 <title tal:content="sText">Parrots say SQUAK!</title>
 
