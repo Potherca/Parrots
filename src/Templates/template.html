@@ -28,11 +28,11 @@
 <section>
     <h1>
         <span class="prefix" tal:content="sPrefix">Parrot says</span>
-        <span class="subject" tal:condition="sSubject" tal:content="sSubject">squak!</span>
+        <span class="subject" tal:condition="sSubject" tal:content="php:htmlentities(sSubject)">squak!</span>
     </h1>
 
     <form tal:condition="not: sSubject" action="./" method="GET" id="JS_subject-form">
-            <input type="text" name="subject" autocomplete="off" autocorrect="off" autocapitalize="none" />
+        <input type="text" name="subject" autocomplete="off" autocorrect="off" autocapitalize="none" />
         <button type="submit">&#10148;</button>
     </form>
 </section>
