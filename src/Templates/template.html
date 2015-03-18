@@ -9,7 +9,7 @@
 <meta property="og:description" content="${sText}" />
 
 <meta tal:condition="sSubject" property="og:image" content="${sUrl}/${php:rawurlencode(sSubject)}.png"/>
-<meta tal:condition="not: sSubject" property="og:image" content="${sUrl}/?subect=.png"/>
+<meta tal:condition="not: sSubject" property="og:image" content="${sUrl}/?subject=.png"/>
 <meta property="og:url" content="${sUrl}/${php:rawurlencode(sSubject)}"/>
 <meta property="og:type" content="article" />
  
