@@ -3,93 +3,113 @@
 namespace Potherca\Parrots\Transformers;
 
 use Potherca\Parrots\AbstractData;
-use Potherca\Parrots\Utilities\ColorConverter;
-use Potherca\Parrots\Utilities\TextSplitter;
+use Potherca\Parrots\Utilities\ConverterInterface;
+use Potherca\Parrots\Utilities\SplitterInterface;
 use GDText\Box;
 use GDText\Color;
+use UnexpectedValueException;
 
 class ImageTransformer extends AbstractData implements TransformerInterface
 {
+    const IMAGE_WIDTH = 1200;
+    const IMAGE_HEIGHT = 630;
+    const ERROR_CLASS_NOT_SET = 'Can not get %s before it has been set';
+    const ERROR_TYPE_NOT_SUPPORTED = 'Type "%s" is not supported';
+
     /** @var Resource */
     private $m_rImage;
-    /* @var ColorConverter */
+    /* @var ConverterInterface */
     private $m_oColorConverter;
-    /* @var TextSplitter */
+    /* @var SplitterInterface */
     private $m_oTextSplitter;
 
-    final public function setColorConverter(ColorConverter $p_oColorConverter)
+    /**
+     * @return ConverterInterface
+     */
+    private function getConverter()
     {
-        $this->m_oColorConverter = $p_oColorConverter;
+        if ($this->m_oColorConverter === null) {
+            throw $this->newLogicException(ConverterInterface::class);
+        } else {
+            return $this->m_oColorConverter;
+        }
     }
 
-    final public function setTextSplitter(TextSplitter $p_oTextSplitter)
+    final public function setConverter(ConverterInterface $p_oConverter)
     {
-        $this->m_oTextSplitter = $p_oTextSplitter;
+        $this->m_oColorConverter = $p_oConverter;
     }
 
+    /**
+     * @return SplitterInterface
+     */
+    private function getSplitter()
+    {
+        if ($this->m_oTextSplitter === null) {
+            throw $this->newLogicException(SplitterInterface::class);
+        } else {
+            return $this->m_oTextSplitter;
+        }
+    }
+
+    final public function setSplitter(SplitterInterface $p_oSplitter)
+    {
+        $this->m_oTextSplitter = $p_oSplitter;
+    }
+
+    /**
+     * @return string
+     *
+     * @throws \Exception
+     */
     final public function transform()
     {
-        $oConverter = $this->m_oColorConverter;
+        $oConverter = $this->getConverter();
+        $oSplitterInterface = $this->getSplitter();
 
-        $aColor = $oConverter->convert($this->getColor());
         $aBackgroundColor = $oConverter->convert($this->getBackgroundColor());
-        $sText = $this->m_oTextSplitter->split($this->getText());
+        $aColor = $oConverter->convert($this->getColor());
+        $sText = $oSplitterInterface->split($this->getText());
 
-        $this->createImage($sText, $aColor, $aBackgroundColor);
+        $this->buildImage($sText, $aColor, $aBackgroundColor);
 
         return $this->output();
     }
 
-    final public function createImage($p_sText, $p_aColor, $p_aBackgroundColor)
+    private function buildImage($p_sText, $p_aColor, $p_aBackgroundColor)
     {
+        $this->createImage($p_aColor, $p_aBackgroundColor);
 
-        $sText = strtoupper($p_sText);
+        if (! empty($p_sText)) {
+            $iWidth = self::IMAGE_WIDTH;
+            $iHeight = self::IMAGE_HEIGHT;
 
-        $aLines = explode("\n", $sText);
-        $iLines = count($aLines);
+            $sText = strtoupper($p_sText);
 
-        $iLongestLine = 0;
-        foreach ($aLines as $t_sLine) {
-            $iLineLength = strlen($t_sLine);
-            if ($iLineLength > $iLongestLine) {
-                $iLongestLine = $iLineLength;
+            $aLines = explode("\n", $sText);
+            $iLines = count($aLines);
+
+            $iLongestLine = 0;
+            foreach ($aLines as $t_sLine) {
+                $iLineLength = strlen($t_sLine);
+                if ($iLineLength > $iLongestLine) {
+                    $iLongestLine = $iLineLength;
+                }
             }
+
+            $iFontSize = 1500 / $iLongestLine;
+
+            $box = new Box($this->m_rImage);
+            $box->setFontFace(__DIR__ . '/../../fonts/OpenSans-Bold.ttf');
+            //@TODO: $box->setFontColor(new Color(255, 75, 140));
+            //$box->setTextShadow(new Color(0, 0, 0, 50), 2, 2);
+
+            $box->setFontSize($iFontSize);
+
+            $box->setBox(0, 0, $iWidth, $iHeight);
+            $box->setTextAlign('center', 'center');
+            $box->draw($sText);
         }
-        $iFontSize = 1500/$iLongestLine;
-
-        $iWidth = 1200;
-        $iHeight = 630;
-
-        $this->m_rImage = imagecreatetruecolor($iWidth, $iHeight);
-
-        imagealphablending($this->m_rImage, false);
-        imagefilledrectangle($this->m_rImage, 0, 0, $iWidth, $iHeight, imagecolorallocatealpha(
-            $this->m_rImage,
-            $p_aBackgroundColor['red'],
-            $p_aBackgroundColor['green'],
-            $p_aBackgroundColor['blue'],
-            1
-        ));
-        imagealphablending($this->m_rImage, true);
-
-        $iColor = imagecolorallocatealpha(
-            $this->m_rImage,
-            $p_aColor['red'],
-            $p_aColor['green'],
-            $p_aColor['blue'],
-            0
-        );
-
-        $box = new Box($this->m_rImage);
-        $box->setFontFace(__DIR__ . '/../../fonts/OpenSans-Bold.ttf');
-        //@TODO: $box->setFontColor(new Color(255, 75, 140));
-        //$box->setTextShadow(new Color(0, 0, 0, 50), 2, 2);
-
-        $box->setFontSize($iFontSize);
-
-        $box->setBox(0, 0, $iWidth, $iHeight);
-        $box->setTextAlign('center', 'center');
-        $box->draw($sText);
     }
 
     /**
@@ -116,20 +136,70 @@ class ImageTransformer extends AbstractData implements TransformerInterface
     private function output()
     {
         $sImage = null;
+        $sType = substr($this->getType(), strpos($this->getType(), '/') + 1);
 
-        ob_start();
-        imagesavealpha($this->m_rImage, true);
-        call_user_func(
-            'image' . substr($this->getType(), strpos($this->getType(), '/')+1),
+        if ($sType === 'jpg') {
+            $sType = 'jpeg';
+        }
+
+        if(is_callable('image' . $sType) === false) {
+            throw new UnexpectedValueException(sprintf(self::ERROR_TYPE_NOT_SUPPORTED, $this->getType()));
+        } else {
+            ob_start();
+            imagesavealpha($this->m_rImage, true);
+            call_user_func(
+                'image' . $sType,
+                $this->m_rImage,
+                null, // if filename is include an actual file is created
+                $this->getQuality()
+            );
+            $sImage = ob_get_clean();
+
+            imagedestroy($this->m_rImage);
+
+            return $sImage;
+        }
+
+    }
+
+    /**
+     * @param string $p_sClassName
+     *
+     * @return \LogicException
+     */
+    private function newLogicException($p_sClassName)
+    {
+        return new \LogicException(sprintf(self::ERROR_CLASS_NOT_SET, $p_sClassName));
+    }
+
+    /**
+     * @param $p_aColor
+     * @param $p_aBackgroundColor
+     */
+    private function createImage($p_aColor, $p_aBackgroundColor) {
+        $iWidth = self::IMAGE_WIDTH;
+        $iHeight = self::IMAGE_HEIGHT;
+
+        $this->m_rImage = imagecreatetruecolor($iWidth, $iHeight);
+
+        imagealphablending($this->m_rImage, false);
+        imagefilledrectangle($this->m_rImage, 0, 0, $iWidth, $iHeight,
+            imagecolorallocatealpha(
+                $this->m_rImage,
+                $p_aBackgroundColor['red'],
+                $p_aBackgroundColor['green'],
+                $p_aBackgroundColor['blue'],
+                1
+            ));
+        imagealphablending($this->m_rImage, true);
+
+        $iColor = imagecolorallocatealpha(
             $this->m_rImage,
-            null, // if filename is include an actual file is created
-            $this->getQuality()
+            $p_aColor['red'],
+            $p_aColor['green'],
+            $p_aColor['blue'],
+            0
         );
-        $sImage = ob_get_clean();
-
-        //imagedestroy($this->m_rImage);
-
-        return $sImage;
     }
 }
 
