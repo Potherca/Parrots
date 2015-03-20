@@ -33,15 +33,12 @@ class Parrots extends AbstractData
     }
 
     //////////////////////////////// PUBLIC API \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    final public function __construct($p_aData)
-    {
-        $this->setFromArray($p_aData);
-        $this->setTypeFromSubject();
-    }
-
     final public function parrot()
     {
+        $this->setTypeFromSubject();
+
         $transformer = $this->m_oTransformer;
+
         $transformer->setFromArray([
             self::PROPERTY_BACKGROUND_COLOR => $this->getBackgroundColor(),
             self::PROPERTY_COLOR => $this->getColor(),
@@ -50,6 +47,7 @@ class Parrots extends AbstractData
             self::PROPERTY_TYPE => $this->getType(),
             self::PROPERTY_URL => $this->getUrl(),
         ]);
+
         $sResult = $transformer->transform();
 
         return $sResult;
