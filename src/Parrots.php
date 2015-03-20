@@ -21,7 +21,7 @@ class Parrots extends AbstractData
     /**
      * @param array $m_aSupportedExtensions
      */
-    public function setSupportedExtensions($m_aSupportedExtensions)
+    final public function setSupportedExtensions($m_aSupportedExtensions)
     {
         $this->m_aSupportedExtensions = $m_aSupportedExtensions;
     }
@@ -35,8 +35,6 @@ class Parrots extends AbstractData
     //////////////////////////////// PUBLIC API \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     final public function parrot()
     {
-        $this->setTypeFromSubject();
-
         $transformer = $this->m_oTransformer;
 
         $transformer->setFromArray([
@@ -53,11 +51,10 @@ class Parrots extends AbstractData
         return $sResult;
     }
 
-    ////////////////////////////// UTILITY METHODS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     /**
      * @return string
      */
-    private function setTypeFromSubject()
+    final public function resolveTypeFromSubject()
     {
         $aParts = explode('.', $this->m_sSubject);
         $iCount = count($aParts);
@@ -68,6 +65,7 @@ class Parrots extends AbstractData
             $this->m_sSubject = implode('.', $aParts);
         }
     }
+    ////////////////////////////// UTILITY METHODS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 }
 
 /*EOF*/

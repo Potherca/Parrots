@@ -45,8 +45,8 @@ $oParrot = new Parrots();
 $oParrot->setFromArray($aData);
 /* set Properties from URL parameters */
 $oParrot->setFromArray($_GET);
-
 /* Feed Transformer to Parrot */
+$oParrot->resolveTypeFromSubject();
 $oTransformer = getTransformerFor($oParrot->getType());
 $oParrot->setTransformer($oTransformer);
 
