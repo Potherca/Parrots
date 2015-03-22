@@ -145,7 +145,10 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException(
             LogicException::class,
-            sprintf(ImageTransformer::ERROR_PROPERTY_NOT_SET, 'BackgroundColor or Color')
+            sprintf(
+                ImageTransformer::ERROR_PROPERTY_NOT_SET,
+                ImageTransformer::PROPERTY_BACKGROUND_COLOR . ' or ' . ImageTransformer::PROPERTY_COLOR
+            )
         );
 
         $this->m_oMockConverter->expects($this->never())

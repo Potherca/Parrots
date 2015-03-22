@@ -203,11 +203,11 @@ class ImageTransformer extends AbstractData implements TransformerInterface
         }// else {
 
         if (empty($this->getBackgroundColor())) {
-            $aUnset[] = 'BackgroundColor';
+            $aUnset[] = self::PROPERTY_BACKGROUND_COLOR;
         }
 
         if (empty($this->getColor())) {
-            $aUnset[] = 'Color';
+            $aUnset[] = self::PROPERTY_COLOR;
         }
 
         if (empty($this->getText())) {
