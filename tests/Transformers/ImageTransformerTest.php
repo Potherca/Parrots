@@ -17,6 +17,23 @@ use UnexpectedValueException;
 class ImageTransformerTest extends \PHPUnit_Framework_TestCase
 {
     ////////////////////////////////// FIXTURES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    const MOCK_BACKGROUND_COLOR = 'mockBackgroundColor';
+    const MOCK_COLOR = 'mockColor';
+    const MOCK_TEXT = 'Mock Text';
+
+    private $m_aExpectedBackgroundColor = [
+        'red' => 255,
+        'green' => 0,
+        'blue' => 0,
+        'alpha' => 1,
+    ];
+    private $m_aExpectedFontColor = [
+        'red' => 0,
+        'green' => 0,
+        'blue' => 255,
+        'alpha' => 0,
+    ];
+
     /** @var ImageTransformer */
     private $transformer;
     /** @var \PHPUnit_Framework_MockObject_MockObject|SplitterInterface */
@@ -30,6 +47,8 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
     }
     /////////////////////////////////// TESTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     /**
+     * @covers Potherca\Parrots\Transformers\ImageTransformer::setSplitter
+     *
      * @uses Potherca\Parrots\Transformers\ImageTransformer::transform
      */
     final public function testTransformerShouldProtestWhenItIsCalledBeforeItHasBeenGivenColorConverter()
@@ -38,14 +57,14 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException(
             LogicException::class,
-            sprintf(ImageTransformer::ERROR_CLASS_NOT_SET, ConverterInterface::class)
+            sprintf(ImageTransformer::ERROR_PROPERTY_NOT_SET, ConverterInterface::class)
         );
 
         $transformer->transform();
     }
 
     /**
-     * @uses Potherca\Parrots\Transformers\ImageTransformer::setConverter
+     * @covers Potherca\Parrots\Transformers\ImageTransformer::setConverter
      * @uses Potherca\Parrots\Transformers\ImageTransformer::transform
      */
     final public function testTransformerShouldProtestWhenItIsCalledBeforeItHasBeenGivenTextSplitter()
@@ -57,7 +76,7 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException(
             LogicException::class,
-            sprintf(ImageTransformer::ERROR_CLASS_NOT_SET, SplitterInterface::class)
+            sprintf(ImageTransformer::ERROR_PROPERTY_NOT_SET, SplitterInterface::class)
         );
 
         $transformer->transform();
@@ -76,7 +95,9 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
         $this->setMockDependencies();
 
         $oTransformer->setFromArray([
-            ImageTransformer::PROPERTY_TYPE => $p_sType
+            ImageTransformer::PROPERTY_TYPE => $p_sType,
+            ImageTransformer::PROPERTY_COLOR => self::MOCK_COLOR,
+            ImageTransformer::PROPERTY_BACKGROUND_COLOR => self::MOCK_BACKGROUND_COLOR,
         ]);
 
         $sImage = $oTransformer->transform();
@@ -104,7 +125,9 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
         $this->setMockDependencies();
 
         $oTransformer->setFromArray([
-            ImageTransformer::PROPERTY_TYPE => $p_sType
+            ImageTransformer::PROPERTY_TYPE => $p_sType,
+            ImageTransformer::PROPERTY_COLOR => self::MOCK_COLOR,
+            ImageTransformer::PROPERTY_BACKGROUND_COLOR => self::MOCK_BACKGROUND_COLOR,
         ]);
 
         $oTransformer->transform();
@@ -114,19 +137,24 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
      * @covers ::transform
      * @covers ::setConverter
      */
-    final public function testTransformerShouldConvertDefaultColorsWhenNoColorsGiven()
+    final public function testTransformerShouldRefuseToConvertWhenNoColorsGiven()
     {
         $oTransformer = $this->transformer;
 
         $this->setMockDependencies();
 
-        $this->m_oMockConverter->expects($this->exactly(2))
+        $this->setExpectedException(
+            LogicException::class,
+            sprintf(ImageTransformer::ERROR_PROPERTY_NOT_SET, 'BackgroundColor or Color')
+        );
+
+        $this->m_oMockConverter->expects($this->never())
             ->method('convert')
-            ->withConsecutive(
-                [ImageTransformer::DEFAULT_COLOR],
-                [ImageTransformer::DEFAULT_BACKGROUND_COLOR]
-            )
         ;
+
+        $oTransformer->setFromArray([
+            ImageTransformer::PROPERTY_TYPE => 'image/png',
+        ]);
 
         $oTransformer->transform();
     }
@@ -141,20 +169,18 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
 
         $this->setMockDependencies();
 
-        $sMockBackgroundColor = 'mockBackgroundColor';
-        $sMockColor = 'mockColor';
-
         $this->m_oMockConverter->expects($this->exactly(2))
             ->method('convert')
             ->withConsecutive(
-                [$sMockBackgroundColor],
-                [$sMockColor]
+                [self::MOCK_BACKGROUND_COLOR],
+                [self::MOCK_COLOR]
             )
         ;
 
         $oTransformer->setFromArray([
-            ImageTransformer::PROPERTY_BACKGROUND_COLOR => $sMockBackgroundColor,
-            ImageTransformer::PROPERTY_COLOR => $sMockColor,
+            ImageTransformer::PROPERTY_TYPE => 'image/png',
+            ImageTransformer::PROPERTY_BACKGROUND_COLOR => self::MOCK_BACKGROUND_COLOR,
+            ImageTransformer::PROPERTY_COLOR => self::MOCK_COLOR,
         ]);
         $oTransformer->transform();
     }
@@ -162,17 +188,26 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
     /**
      * @covers ::transform
      */
-    final public function testTransformerShouldConvertGivenForegroundColorWhenAskedToTransform()
-    {
-
-    }
-
-    /**
-     * @covers ::transform
-     */
     final public function testTransformerShouldSplitGivenTextWhenAskedToTransform()
     {
+        $oTransformer = $this->transformer;
 
+        $this->setMockDependencies();
+
+        $this->m_oMockSplitter->expects($this->exactly(1))
+            ->method('split')
+            ->with(self::MOCK_TEXT)
+        ;
+
+        $oTransformer->setFromArray([
+            ImageTransformer::PROPERTY_TYPE => 'image/png',
+            ImageTransformer::PROPERTY_BACKGROUND_COLOR => self::MOCK_BACKGROUND_COLOR,
+            ImageTransformer::PROPERTY_COLOR => self::MOCK_COLOR,
+            ImageTransformer::PROPERTY_PREFIX => 'Mock',
+            ImageTransformer::PROPERTY_SUBJECT => 'Text',
+        ]);
+
+        $oTransformer->transform();
     }
 
     /**
@@ -180,31 +215,105 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
      */
     final public function testTransformerShouldReturnAnImageWhenAskedToTransform()
     {
+        $oTransformer = $this->transformer;
 
+        $this->setMockDependencies();
+
+        $this->m_oMockSplitter->expects($this->exactly(1))
+            ->method('split')
+            ->with(self::MOCK_TEXT)
+            ->willReturn('X')
+        ;
+
+        $this->m_oMockConverter->expects($this->exactly(2))
+            ->method('convert')
+            ->withConsecutive(
+                [self::MOCK_BACKGROUND_COLOR],
+                [self::MOCK_COLOR]
+            )
+            ->willReturnOnConsecutiveCalls(
+                $this->m_aExpectedBackgroundColor,
+                $this->m_aExpectedFontColor
+            )
+        ;
+
+        $oTransformer->setFromArray([
+            ImageTransformer::PROPERTY_TYPE => 'image/png',
+            ImageTransformer::PROPERTY_BACKGROUND_COLOR => self::MOCK_BACKGROUND_COLOR,
+            ImageTransformer::PROPERTY_COLOR => self::MOCK_COLOR,
+            ImageTransformer::PROPERTY_PREFIX => 'Mock',
+            ImageTransformer::PROPERTY_SUBJECT => 'Text',
+        ]);
+
+        $sImage = $oTransformer->transform();
+
+        $rImage = imagecreatefromstring($sImage);
+
+        $this->assertInternalType('resource', $rImage, 'Image was not created');
+
+        return $sImage;
     }
 
     /**
      * @covers ::transform
+     *
+     * @depends testTransformerShouldReturnAnImageWhenAskedToTransform
+     *
+     * @param string $p_sImage
      */
-    final public function testTransformerShouldUseExpectedDimensionsWhenImageIsReturned()
+    final public function testTransformerShouldUseExpectedDimensionsWhenImageIsReturned($p_sImage)
     {
+        $aActual = getimagesizefromstring($p_sImage);
 
+        $iWidth = ImageTransformer::IMAGE_WIDTH;
+        $iHeight = ImageTransformer::IMAGE_HEIGHT;
+
+        $aExpected = [
+            0 => $iWidth,
+            1 => $iHeight,
+            2 => 3,
+            3 => sprintf('width="%d" height="%d"', $iWidth, $iHeight),
+            'bits' => 8,
+            'mime' => 'image/png',
+        ];
+        $this->assertEquals($aExpected, $aActual);
     }
 
     /**
      * @covers ::transform
+     * @depends testTransformerShouldReturnAnImageWhenAskedToTransform
+     *
+     * @param string $p_sImage
      */
-    final public function testTransformerShouldUseGivenColorWhenImageIsReturned()
+    final public function testTransformerShouldUseGivenColorWhenImageIsReturned($p_sImage)
     {
+        $rImage = imagecreatefromstring($p_sImage);
 
+        $iColor = imagecolorat(
+            $rImage,
+            ImageTransformer::IMAGE_WIDTH/2,
+            ImageTransformer::IMAGE_HEIGHT/2
+        );
+        $aActualFontColor = imagecolorsforindex($rImage, $iColor);
+
+        $this->assertEquals($this->m_aExpectedFontColor, $aActualFontColor);
     }
 
     /**
      * @covers ::transform
+     *
+     * @depends testTransformerShouldReturnAnImageWhenAskedToTransform
+     *
+     * @param string $p_sImage
      */
-    final public function testTransformerShouldUseGivenBackgroundColorWhenImageIsReturned()
+    final public function testTransformerShouldUseGivenBackgroundColorWhenImageIsReturned($p_sImage)
     {
+        $rImage = imagecreatefromstring($p_sImage);
 
+        $iColor = imagecolorat($rImage, 10, 10);
+        $aActualBackgroundColor = imagecolorsforindex($rImage, $iColor);
+
+        $this->assertEquals($this->m_aExpectedBackgroundColor, $aActualBackgroundColor);
     }
     ////////////////////////////// MOCKS AND STUBS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     /**
@@ -245,22 +354,21 @@ class ImageTransformerTest extends \PHPUnit_Framework_TestCase
     final public function provideSupportedTypes()
     {
         return [
-            ['image/jpg'],
-            ['image/jpeg'],
-            ['image/png'],
-            ['image/gif'],
+            'gif' => ['image/gif'],
+            'jpeg' => ['image/jpeg'],
+            'jpg' => ['image/jpg'],
+            'png' => ['image/png'],
         ];
     }
 
     final public function provideUnsupportedTypes()
     {
         return [
-            [ImageTransformer::DEFAULT_TYPE],
-            ['text/plain'],
-            ['png'],
-            [false],
-            [true],
-            [null],
+            'text' => ['text/plain'],
+            'png' => ['png'],
+            'FALSE' => [false],
+            'TRUE' => [true],
+            'NULL' => [null],
         ];
     }
 

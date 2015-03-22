@@ -13,7 +13,7 @@ class ImageTransformer extends AbstractData implements TransformerInterface
 {
     const IMAGE_WIDTH = 1200;
     const IMAGE_HEIGHT = 630;
-    const ERROR_CLASS_NOT_SET = 'Can not get %s before it has been set';
+    const ERROR_PROPERTY_NOT_SET = 'Can not get %s before it has been set';
     const ERROR_TYPE_NOT_SUPPORTED = 'Type "%s" is not supported';
 
     /** @var Resource */
@@ -67,6 +67,8 @@ class ImageTransformer extends AbstractData implements TransformerInterface
         $oConverter = $this->getConverter();
         $oSplitterInterface = $this->getSplitter();
 
+        $this->validateProperties();
+
         $aBackgroundColor = $oConverter->convert($this->getBackgroundColor());
         $aColor = $oConverter->convert($this->getColor());
         $sText = $oSplitterInterface->split($this->getText());
@@ -87,7 +89,6 @@ class ImageTransformer extends AbstractData implements TransformerInterface
             $sText = strtoupper($p_sText);
 
             $aLines = explode("\n", $sText);
-            $iLines = count($aLines);
 
             $iLongestLine = 0;
             foreach ($aLines as $t_sLine) {
@@ -101,7 +102,7 @@ class ImageTransformer extends AbstractData implements TransformerInterface
 
             $box = new Box($this->m_rImage);
             $box->setFontFace(__DIR__ . '/../../fonts/OpenSans-Bold.ttf');
-            //@TODO: $box->setFontColor(new Color(255, 75, 140));
+            $box->setFontColor(new Color($p_aColor['red'], $p_aColor['green'], $p_aColor['blue']));
             //$box->setTextShadow(new Color(0, 0, 0, 50), 2, 2);
 
             $box->setFontSize($iFontSize);
@@ -136,30 +137,21 @@ class ImageTransformer extends AbstractData implements TransformerInterface
     private function output()
     {
         $sImage = null;
-        $sType = substr($this->getType(), strpos($this->getType(), '/') + 1);
+        $sType = $this->inferImageTypeFromMimeType();
 
-        if ($sType === 'jpg') {
-            $sType = 'jpeg';
-        }
+        ob_start();
+        imagesavealpha($this->m_rImage, true);
+        call_user_func(
+            'image' . $sType,
+            $this->m_rImage,
+            null, // if filename is included an actual file is created
+            $this->getQuality()
+        );
+        $sImage = ob_get_clean();
 
-        if(is_callable('image' . $sType) === false) {
-            throw new UnexpectedValueException(sprintf(self::ERROR_TYPE_NOT_SUPPORTED, $this->getType()));
-        } else {
-            ob_start();
-            imagesavealpha($this->m_rImage, true);
-            call_user_func(
-                'image' . $sType,
-                $this->m_rImage,
-                null, // if filename is include an actual file is created
-                $this->getQuality()
-            );
-            $sImage = ob_get_clean();
+        imagedestroy($this->m_rImage);
 
-            imagedestroy($this->m_rImage);
-
-            return $sImage;
-        }
-
+        return $sImage;
     }
 
     /**
@@ -169,7 +161,7 @@ class ImageTransformer extends AbstractData implements TransformerInterface
      */
     private function newLogicException($p_sClassName)
     {
-        return new \LogicException(sprintf(self::ERROR_CLASS_NOT_SET, $p_sClassName));
+        return new \LogicException(sprintf(self::ERROR_PROPERTY_NOT_SET, $p_sClassName));
     }
 
     /**
@@ -193,13 +185,52 @@ class ImageTransformer extends AbstractData implements TransformerInterface
             ));
         imagealphablending($this->m_rImage, true);
 
-        $iColor = imagecolorallocatealpha(
+        imagecolorallocatealpha(
             $this->m_rImage,
             $p_aColor['red'],
             $p_aColor['green'],
             $p_aColor['blue'],
             0
         );
+    }
+
+    private function validateProperties()
+    {
+        $aUnset = [];
+
+        if(is_callable('image' . $this->inferImageTypeFromMimeType()) === false) {
+            throw new UnexpectedValueException(sprintf(self::ERROR_TYPE_NOT_SUPPORTED, $this->getType()));
+        }// else {
+
+        if (empty($this->getBackgroundColor())) {
+            $aUnset[] = 'BackgroundColor';
+        }
+
+        if (empty($this->getColor())) {
+            $aUnset[] = 'Color';
+        }
+
+        if (empty($this->getText())) {
+            $aUnset[] = 'Text';
+        }
+
+        if (empty($aUnset) === false) {
+            throw $this->newLogicException(implode(' or ', $aUnset));
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function inferImageTypeFromMimeType()
+    {
+        $sType = substr($this->getType(), strpos($this->getType(), '/') + 1);
+
+        if ($sType === 'jpg') {
+            $sType = 'jpeg';
+        }
+
+        return $sType;
     }
 }
 
