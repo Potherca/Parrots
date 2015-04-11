@@ -21,7 +21,7 @@ class Parrots extends AbstractData
     /**
      * @param array $m_aSupportedExtensions
      */
-    public function setSupportedExtensions($m_aSupportedExtensions)
+    final public function setSupportedExtensions($m_aSupportedExtensions)
     {
         $this->m_aSupportedExtensions = $m_aSupportedExtensions;
     }
@@ -33,15 +33,10 @@ class Parrots extends AbstractData
     }
 
     //////////////////////////////// PUBLIC API \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    final public function __construct($p_aData)
-    {
-        $this->setFromArray($p_aData);
-        $this->setTypeFromSubject();
-    }
-
     final public function parrot()
     {
         $transformer = $this->m_oTransformer;
+
         $transformer->setFromArray([
             self::PROPERTY_BACKGROUND_COLOR => $this->getBackgroundColor(),
             self::PROPERTY_COLOR => $this->getColor(),
@@ -50,16 +45,16 @@ class Parrots extends AbstractData
             self::PROPERTY_TYPE => $this->getType(),
             self::PROPERTY_URL => $this->getUrl(),
         ]);
+
         $sResult = $transformer->transform();
 
         return $sResult;
     }
 
-    ////////////////////////////// UTILITY METHODS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     /**
      * @return string
      */
-    private function setTypeFromSubject()
+    final public function resolveTypeFromSubject()
     {
         $aParts = explode('.', $this->m_sSubject);
         $iCount = count($aParts);
@@ -70,6 +65,7 @@ class Parrots extends AbstractData
             $this->m_sSubject = implode('.', $aParts);
         }
     }
+    ////////////////////////////// UTILITY METHODS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 }
 
 /*EOF*/

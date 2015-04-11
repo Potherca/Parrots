@@ -29,27 +29,24 @@ if (isset($_SERVER['HTTP_ACCEPT'])) {
     $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
 }
 
-
-    
-/* Get Subject from URL parameter */
+/* Get Subject from URL */
 if (empty($aData[Parrots::PROPERTY_SUBJECT])) {
     if(isset($_SERVER['PATH_INFO'])) {
         /* Strip leading slash */
         $aData[Parrots::PROPERTY_SUBJECT] = substr($_SERVER['PATH_INFO'], 1);
-    }
-
-    if(isset($_GET[Parrots::PROPERTY_SUBJECT])) {
-        $aData[Parrots::PROPERTY_SUBJECT] = $_GET[Parrots::PROPERTY_SUBJECT];
     }
 }
 
 /* Construct the site URL */
 $aData[Parrots::PROPERTY_URL] = $_SERVER['REQUEST_SCHEME'] . '://' . $sDomain;
 
+$oParrot = new Parrots();
 /* Feed Data to the Parrot */
-$oParrot = new Parrots($aData);
-
+$oParrot->setFromArray($aData);
+/* set Properties from URL parameters */
+$oParrot->setFromArray($_GET);
 /* Feed Transformer to Parrot */
+$oParrot->resolveTypeFromSubject();
 $oTransformer = getTransformerFor($oParrot->getType());
 $oParrot->setTransformer($oTransformer);
 

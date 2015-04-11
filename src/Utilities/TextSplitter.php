@@ -2,7 +2,7 @@
 
 namespace Potherca\Parrots\Utilities;
 
-class TextSplitter
+class TextSplitter implements SplitterInterface
 {
     /** @var array */
     private $m_aWords = [];
@@ -32,7 +32,7 @@ class TextSplitter
         return $sSplitText;
     }
 
-    final public function parse($p_sText)
+    private function parse($p_sText)
     {
         $this->m_aWords = $this->splitTextToWords($p_sText);
 

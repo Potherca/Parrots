@@ -2,7 +2,7 @@
 
 namespace Potherca\Parrots\Utilities;
 
-class ColorConverter
+class ColorConverter implements ConverterInterface
 {
     private $m_aColorNames  =  [
         'aliceblue' => ['red' => 0xF0, 'green' => 0xF8, 'blue' => 0xFF],
@@ -142,9 +142,13 @@ class ColorConverter
         'yellow' => ['red' => 0xFF, 'green' => 0xFF, 'blue' => 0x00],
         'yellowgreen' => ['red' => 0x9A, 'green' => 0xCD, 'blue' => 0x32]
     ];
-    
+
     /**
+     * @param string $p_sColor
+     *
      * @return array
+     *
+     * @throws \Exception
      */
     final public function convert($p_sColor)
     {
@@ -153,7 +157,7 @@ class ColorConverter
             'green' => 0x00,
             'blue' => 0x00,
         ];
-    
+
         if (array_key_exists($p_sColor, $this->m_aColorNames)) {
             // Named Color
             $aColors = $this->m_aColorNames[$p_sColor];

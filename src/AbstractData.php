@@ -5,25 +5,25 @@ namespace Potherca\Parrots;
 abstract class AbstractData implements DataInterface
 {
     ////////////////////////////// CLASS PROPERTIES \\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    const PROPERTY_TYPE = 'type';
-    const PROPERTY_SUBJECT = 'subject';
-    const PROPERTY_PREFIX = 'prefix';
     const PROPERTY_BACKGROUND_COLOR = 'background-color';
     const PROPERTY_COLOR = 'color';
+    const PROPERTY_PREFIX = 'prefix';
+    const PROPERTY_SUBJECT = 'subject';
+    const PROPERTY_TYPE = 'type';
     const PROPERTY_URL = 'url';
 
     /** @var string */
-    protected $m_sBackgroundColor = 'white';
+    protected $m_sBackgroundColor;
     /** @var string */
-    protected $m_sColor = 'black';
+    protected $m_sColor;
     /** @var string */
     protected $m_sPrefix = '';
     /** @var string */
     protected $m_sSubject = '';
     /** @var string */
-    protected $m_sType = 'text/plain';
+    protected $m_sType;
     /** @var string */
-    protected $m_sUrl = 'http://localhost';
+    protected $m_sUrl;
 
     //////////////////////////// SETTERS AND GETTERS \\\\\\\\\\\\\\\\\\\\\\\\\\\
     /** @return string */
