@@ -14,6 +14,7 @@ class Parrots extends AbstractData
         'html' => 'text/html',
         'json' => 'application/json',
         'png' => 'image/png',
+        'slack' => 'application/slack',
         'txt' => 'text/plain',
     );
 
