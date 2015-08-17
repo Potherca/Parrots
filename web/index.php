@@ -7,6 +7,7 @@ use PHPTAL;
 use Potherca\Parrots\Transformers\HtmlTransformer;
 use Potherca\Parrots\Transformers\ImageTransformer;
 use Potherca\Parrots\Transformers\JsonTransformer;
+use Potherca\Parrots\Transformers\SlackTransformer;
 use Potherca\Parrots\Transformers\TextTransformer;
 use Potherca\Parrots\Transformers\TransformerInterface;
 use Potherca\Parrots\Utilities\ColorConverter;
@@ -27,6 +28,14 @@ $aData = getDataFromConfigFile($sConfigFile);
 if (isset($_SERVER['HTTP_ACCEPT'])) {
     $oNegotiator = new FormatNegotiator();
     $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
+}
+
+if (isset($_POST['text'], $_POST['trigger_word'])) {
+    // Slackbot 1.0 (+https://api.slack.com/robots)
+    //text=googlebot: What is the air-speed velocity of an unladen swallow?
+    //trigger_word=googlebot:
+    $aData[Parrots::PROPERTY_TYPE] = 'application/slack';
+    $aData[Parrots::PROPERTY_SUBJECT] = trim(substr($_POST['text'], strlen($_POST['trigger_word'])));
 }
 
 /* Get Subject from URL */
@@ -76,6 +85,10 @@ function getTransformerFor($sType)
             $oTransformer = new ImageTransformer();
             $oTransformer->setColorConverter(new ColorConverter());
             $oTransformer->setTextSplitter(new TextSplitter());
+            break;
+
+        case 'application/slack':
+            $oTransformer = new SlackTransformer();
             break;
 
         case 'text/plain':
