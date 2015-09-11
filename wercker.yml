@@ -10,24 +10,29 @@ build:
                 echo "Running from : $(which php)"
                 echo "Installed Modules: $(php --modules)"
                 echo "================================================================================"
+        
         # Install dependencies with composer
         - script:
             name: Install Dependencies
             code: |-
                 composer install --no-interaction
+        
         # Check for syntax errors
         - script:
             name: Run PHP Parallel Lint
             code: |-
                 ./vendor/bin/parallel-lint src/
+        
         # Execute tests with PhpUnit
-        #- script:
-        #    name: Run Test Suite
-        #    code: |-
-        #        ./vendor/bin/phpunit
+        - script:
+            name: Run Test Suite
+            code: |-
+                ./vendor/bin/phpunit
+        
         # Validate coding standards
         - script:
             name: Run PHP Code Sniffer
             code: |-
                 ./vendor/bin/phpcs -p -s --standard=PSR2 --encoding=utf8 --report-full --report-gitblame src/
+
 #EOF
