@@ -168,21 +168,28 @@ class ImageTransformer extends AbstractData implements TransformerInterface
      * @param $p_aColor
      * @param $p_aBackgroundColor
      */
-    private function createImage($p_aColor, $p_aBackgroundColor) {
+    private function createImage($p_aColor, $p_aBackgroundColor)
+    {
         $iWidth = self::IMAGE_WIDTH;
         $iHeight = self::IMAGE_HEIGHT;
 
         $this->m_rImage = imagecreatetruecolor($iWidth, $iHeight);
 
         imagealphablending($this->m_rImage, false);
-        imagefilledrectangle($this->m_rImage, 0, 0, $iWidth, $iHeight,
+        imagefilledrectangle(
+            $this->m_rImage,
+            0,
+            0,
+            $iWidth,
+            $iHeight,
             imagecolorallocatealpha(
                 $this->m_rImage,
                 $p_aBackgroundColor['red'],
                 $p_aBackgroundColor['green'],
                 $p_aBackgroundColor['blue'],
                 1
-            ));
+            )
+        );
         imagealphablending($this->m_rImage, true);
 
         imagecolorallocatealpha(
@@ -198,7 +205,7 @@ class ImageTransformer extends AbstractData implements TransformerInterface
     {
         $aUnset = [];
 
-        if(is_callable('image' . $this->inferImageTypeFromMimeType()) === false) {
+        if (is_callable('image' . $this->inferImageTypeFromMimeType()) === false) {
             throw new UnexpectedValueException(sprintf(self::ERROR_TYPE_NOT_SUPPORTED, $this->getType()));
         }// else {
 
