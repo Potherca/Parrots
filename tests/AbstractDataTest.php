@@ -12,10 +12,6 @@ class AbstractDataTest extends \PHPUnit_Framework_TestCase
     /** @var ${CLASS_NAME} */
     private $subject;
 
-    protected function setUp()
-    {
-        $this->subject = new AbstractData();
-    }
     /////////////////////////////////// TESTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
         /**
          * @test

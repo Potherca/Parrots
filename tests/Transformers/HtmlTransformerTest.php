@@ -22,8 +22,6 @@ class HtmlTransformerTest extends \PHPUnit_Framework_TestCase
      */
     final public function testTransformerShouldProtestWhenItIsCalledBeforeItHasBeenGivenColorConverter()
     {
-        $transformer = $this->transformer;
-        $transformer->transform();
     }
 
     /**
