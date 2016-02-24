@@ -13,19 +13,26 @@ use Potherca\Parrots\Transformers\TransformerInterface;
 use Potherca\Parrots\Utilities\ColorConverter;
 use Potherca\Parrots\Utilities\TextSplitter;
 
-require '../vendor/autoload.php';
+/* @FIXME: This file contains too much logic. Most of it should be moved to a separate file/class BMP/2016/02/24 */
+
+$sRootPath = getRootPath(__DIR__);
+
+if (is_file($sRootPath . '/vendor/autoload.php')) {
+    require $sRootPath . '/vendor/autoload.php';
+} else {
+    throw new \UnexpectedValueException('Could not find composer autoload file');
+}
 
 /* Get Config from file */
-if (isset($_SERVER['HTTP_HOST'])) {
+$sDomain = 'localhost';
+if (array_key_exists('HTTP_HOST', $_SERVER)) {
     $sDomain = $_SERVER['HTTP_HOST'];
-} else {
-    $sDomain = 'localhost';
 }
-$sConfigFile = getConfigFileForDomain($sDomain);
+$sConfigFile = getConfigFileForDomain($sDomain, $sRootPath);
 $aData = getDataFromConfigFile($sConfigFile);
 
 /* Get Type from HEADER */
-if (isset($_SERVER['HTTP_ACCEPT'])) {
+if (array_key_exists('HTTP_ACCEPT', $_SERVER)) {
     $oNegotiator = new FormatNegotiator();
     $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
 }
@@ -56,7 +63,7 @@ $oParrot->setFromArray($aData);
 $oParrot->setFromArray($_GET);
 /* Feed Transformer to Parrot */
 $oParrot->resolveTypeFromSubject();
-$oTransformer = getTransformerFor($oParrot->getType());
+$oTransformer = getTransformerFor($oParrot->getType(), $sRootPath);
 $oParrot->setTransformer($oTransformer);
 
 /* Send Output from Parrot to the Browser*/
@@ -67,15 +74,33 @@ die($sOutput);
 /*EOF*/
 
 /**
- * @param $sType
+ * @param $sPath
+ * @return mixed
+ */
+function getRootPath($sPath)
+{
+    $iVendorPosition = strrpos($sPath, 'vendor');
+    if ($iVendorPosition !== false) {
+        // minus one to remove directory separator at the end of the path
+        $iLength = $iVendorPosition - 1;
+        $sRootPath = substr($sPath, 0, $iLength);
+        return $sRootPath;
+    } else {
+        $sRootPath = dirname($sPath);
+        return $sRootPath;
+    }
+}
+
+/**
+ * @param $p_sType
  *
  * @return TransformerInterface
  *
  * @throws \Exception
  */
-function getTransformerFor($sType)
+function getTransformerFor($p_sType, $p_sRootPath)
 {
-    switch ($sType) {
+    switch ($p_sType) {
         case 'application/json':
         case 'text/javascript':
             $oTransformer = new JsonTransformer();
@@ -98,6 +123,12 @@ function getTransformerFor($sType)
         case 'text/html':
         default:
             $sTemplatePath = __DIR__ . '/../src/Templates/template.html';
+
+            /* See if there is a project specific override */
+            if (is_file($p_sRootPath . '/src/Templates/template.html')) {
+                $sTemplatePath = $p_sRootPath . '/src/Templates/template.html';
+            }
+
             $oTemplate = new PHPTAL($sTemplatePath);
             $oTransformer = new HtmlTransformer();
             $oTransformer->setTemplate($oTemplate);
@@ -139,16 +170,20 @@ function getDataFromConfigFile($sConfigFile)
 }
 
 /**
- * @param $sDomain
+ * @param $p_sDomain
  *
  * @return string
  */
-function getConfigFileForDomain($sDomain)
+function getConfigFileForDomain($p_sDomain, $p_sRootPath)
 {
-    if (file_exists('../config/' . $sDomain . '.json')) {
-        $sConfigFile = '../config/' . $sDomain . '.json';
+    if (file_exists($p_sRootPath.'/config/' . $p_sDomain . '.json')) {
+        $sConfigFile = $p_sRootPath.'/config/' . $p_sDomain . '.json';
+    } elseif (file_exists($p_sRootPath.'/config/default.json')) {
+        $sConfigFile = $p_sRootPath.'/config/default.json';
+    } elseif (file_exists(__DIR__ . '/../config/default.json')) {
+        $sConfigFile = __DIR__ . '/../config/default.json';
     } else {
-        $sConfigFile = '../config/default.json';
+        throw new \UnexpectedValueException('Could not find configuration file');
     }
     return $sConfigFile;
 }
