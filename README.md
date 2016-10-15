@@ -19,7 +19,7 @@ Simple web service that outputs what it has been given as input with a prefix ad
 5. Fill out the input field and submit the form
 6. Be amazed by the result
 
- Usage
+Usage
 ----------------
 
 To change the colours or the prefix text, there are two options. 
@@ -27,7 +27,7 @@ To change the colours or the prefix text, there are two options.
 The easiest way is simply to edit the `default.json` file in the `config` directory.
 
 A more advanced option is to add a new config file with a name that matches the
-domain Parrots is run on. For exmple, if Parrots is hosted at `http://example.com',
+domain Parrots is run on. For exmple, if Parrots is hosted at `http://example.com`,
 create the file `config/example.com.json`
 
  Other info
@@ -37,8 +37,7 @@ To report bugs, feature requests or other issues, visit the [issues page]
 
 ### License
 
-This project has been licensed under [GPL-3.0+ License] (GNU General Public License v3.0 or higher).
-
+This project has been licensed under [GPL-3.0+ License][GPL-3.0+] (GNU General Public License v3.0 or higher).
 
 ### Origin
 
@@ -61,16 +60,6 @@ verb "parrot". To quote fom a random dictionary:
 >
 > /ˈparət/
 >
-<!--
-> ##Noun
->    **plural noun**: *parrots*
->
->    A bird, often vividly coloured, with a short downcurved hooked bill,
->    grasping feet, and a raucous voice, found especially in the tropics and
->    feeding on fruits and seeds. Many are popular as cage birds, and some are
->    able to mimic the human voice.
->
--->
 > ##Verb
 >    **3rd person present**: *parrots*
 >
@@ -95,7 +84,7 @@ licensed under a [CC BY 3 License] (Creative Commons Attribution License).
 [Birds icon]: http://thenounproject.com/term/birds/112329/
 [the Noun Project]: http://www.thenounproject.com
 [CC BY 3 License]: https://creativecommons.org/licenses/by/3.0/
-[GPL-3.0+ License]: ./LICENSE
+[GPL-3.0+]: ./LICENSE
 [issues page]: https://github.com/potherca/Parrots/issues
 [parrots-logo-large]: ./parrots-logo-250.png
 [Parrots]: https://github.com/potherca/Parrots/
