@@ -14,7 +14,6 @@ use Potherca\Parrots\Utilities\ColorConverter;
 use Potherca\Parrots\Utilities\TextSplitter;
 
 /* @FIXME: This file contains too much logic. Most of it should be moved to a separate file/class BMP/2016/02/24 */
-/* @FIXME: If a "subject" is set in the config.json, it currently takes precedence over the $PATH. */
 /* @FIXME: The code to find `vendor` is _very_ brittle. What abou COMPOSER_VENDOR_DIR and config.vendor-dir? */
 
 $sRootPath = getRootPath(__DIR__);
@@ -39,20 +38,19 @@ if (array_key_exists('HTTP_ACCEPT', $_SERVER)) {
     $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
 }
 
+/* Get Subject from URL */
+if(isset($_SERVER['PATH_INFO'])) {
+    /* Strip leading slash */
+    $aData[Parrots::PROPERTY_SUBJECT] = substr($_SERVER['PATH_INFO'], 1);
+}
+
+/* POST variables take precedence over the PATH_INFO */
 if (isset($_POST['text'], $_POST['trigger_word'])) {
     // Slackbot 1.0 (+https://api.slack.com/robots)
     //text=googlebot: What is the air-speed velocity of an unladen swallow?
     //trigger_word=googlebot:
     $aData[Parrots::PROPERTY_TYPE] = 'application/slack';
     $aData[Parrots::PROPERTY_SUBJECT] = trim(substr($_POST['text'], strlen($_POST['trigger_word'])));
-}
-
-/* Get Subject from URL */
-if (empty($aData[Parrots::PROPERTY_SUBJECT])) {
-    if(isset($_SERVER['PATH_INFO'])) {
-        /* Strip leading slash */
-        $aData[Parrots::PROPERTY_SUBJECT] = substr($_SERVER['PATH_INFO'], 1);
-    }
 }
 
 /* Construct the site URL */
