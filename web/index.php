@@ -14,6 +14,8 @@ use Potherca\Parrots\Utilities\ColorConverter;
 use Potherca\Parrots\Utilities\TextSplitter;
 
 /* @FIXME: This file contains too much logic. Most of it should be moved to a separate file/class BMP/2016/02/24 */
+/* @FIXME: If a "subject" is set in the config.json, it currently takes precedence over the $PATH. */
+/* @FIXME: The code to find `vendor` is _very_ brittle. What abou COMPOSER_VENDOR_DIR and config.vendor-dir? */
 
 $sRootPath = getRootPath(__DIR__);
 
@@ -108,8 +110,8 @@ function getTransformerFor($p_sType, $p_sRootPath)
 
         case 'image/png':
             $oTransformer = new ImageTransformer();
-            $oTransformer->setColorConverter(new ColorConverter());
-            $oTransformer->setTextSplitter(new TextSplitter());
+            $oTransformer->setConverter(new ColorConverter());
+            $oTransformer->setSplitter(new TextSplitter());
             break;
 
         case 'application/slack':
