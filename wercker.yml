@@ -1,4 +1,6 @@
-box: dealerdirect/ci-php:latest
+box:
+  id: dealerdirect/ci-php
+  registry: registry.local
 #  id: dealerdirect/ci-php
 #  ports:
 #    - "8080"
