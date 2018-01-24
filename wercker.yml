@@ -1,5 +1,5 @@
-box: 
-  id: dealerdirect/ci-php
+box: dealerdirect/ci-php
+#  id: dealerdirect/ci-php
 #  ports:
 #    - "8080"
 build:
