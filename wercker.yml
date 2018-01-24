@@ -1,33 +1,45 @@
-box: wercker/php
+box: php
+#    id: php
+#    ports:
+#        - "8080"
 build:
-    # The steps that will be executed on build
-    steps:
-        - script:
-            name: PHP Information
-            code: |-
-                echo "================================================================================"
-                echo "PHP version  : $(php --version)"
-                echo "Running from : $(which php)"
-                echo "Installed Modules: $(php --modules)"
-                echo "================================================================================"
-        # Install dependencies with composer
-        - script:
-            name: Install Dependencies
-            code: |-
-                composer install --no-interaction
-        # Check for syntax errors
-        - script:
-            name: Run PHP Parallel Lint
-            code: |-
-                ./vendor/bin/parallel-lint src/
-        # Execute tests with PhpUnit
-        #- script:
-        #    name: Run Test Suite
-        #    code: |-
-        #        ./vendor/bin/phpunit
-        # Validate coding standards
-        - script:
-            name: Run PHP Code Sniffer
-            code: |-
-                ./vendor/bin/phpcs -p -s --standard=PSR2 --encoding=utf8 --report-full --report-gitblame src/
+  # The steps that will be executed on build
+  steps:
+# ================================================================================        
+#   - install-packages:
+#       packages: git
+#
+#    - script:
+#        name: Serve application
+#        code: php -S localhost:8080 >> /dev/null &
+# ================================================================================
+    - script:
+        name: install composer
+        code: curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+    - script:
+        name: PHP Information
+        code: |-
+            echo "================================================================================"
+            echo "PHP version  : $(php --version)"
+            echo "Running from : $(which php)"
+            echo "Installed Modules: $(php --modules)"
+            echo "================================================================================"
+    # Install dependencies with composer
+    - script:
+        name: Install Dependencies
+        code: composer install --no-interaction
+    # Check for syntax errors
+    - script:
+        name: Run PHP Parallel Lint
+        code: ./vendor/bin/parallel-lint src/
+    # Execute tests with PhpUnit
+    #- script:
+    #    name: Run Test Suite
+    #    code: ./vendor/bin/phpunit
+    # Validate coding standards
+    - script:
+        name: Run PHP Code Sniffer
+        code: |-
+            ./vendor/bin/phpcs -p -s --standard=PSR2 --encoding=utf8 --report-full --report-gitblame src/
+# ================================================================================
 #EOF
