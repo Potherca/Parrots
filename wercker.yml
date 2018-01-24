@@ -1,7 +1,7 @@
-box: dealerdirect/ci-php
-#    id: php
-#    ports:
-#        - "8080"
+box: 
+  id: dealerdirect/ci-php
+#  ports:
+#    - "8080"
 build:
   # The steps that will be executed on build
   steps:
