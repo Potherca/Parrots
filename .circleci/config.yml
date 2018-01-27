@@ -25,7 +25,7 @@ jobs:
             #> fallback to using the latest cache if no exact match is found
             - v1-dependencies-
       - run:
-          name: Install dependencies with composer
+          name: Install PHP dependencies (using Composer)
           command: |-
             composer install --no-interaction --no-progress  --no-suggest --prefer-dist --verbose
       - save_cache:
@@ -36,7 +36,7 @@ jobs:
           name: Lint PHP files
           command: parallel-lint --exclude vendor ./
       - run:
-          name: Validate Composer file
+          name: Validate Composer
           command: composer validate
       - run:
           name: PHP Code Sniffer -- PSR2
@@ -52,7 +52,12 @@ jobs:
       - run:
           name: Security checker
           command: security-checker -n security:check
-      - run: |
+      - run:
+          name: PHP Mess Detector
+          command: phpmd ./ text  cleancode codesize controversial design naming unusedcode --exclude vendor,tests
+      - run:
+          name: Unit Tests (using PHPUnit)
+          command: |
           if [ -f ./vendor/bin/phpunit ]; then
              ./vendor/bin/phpunit -c phpunit.xml.dist
           else
