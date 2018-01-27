@@ -1,0 +1,144 @@
+#> PHP CircleCI 2.0 configuration file
+#>
+#> Check https://circleci.com/docs/2.0/language-php/ for more details
+#>
+
+defaults: &defaults
+  working_directory: /tmp/build/
+  docker:
+      #> The docker image to use in this job
+      - image: dealerdirect/php:5.6
+
+version: 2
+
+jobs:
+  #> When using Workflows, jobs MUST have a name unique within this config file.
+  #> When NOT using workflows, the jobs map MUST contain a job named `build`.
+  # > The steps that will be executed on build
+  # steps:
+  #   > Shorthanded command syntax (can also have multiple lines):
+  #   - run: echo "hello world"
+  #
+  #   > Full command syntax may contain the items below. Only `command` is required.
+  #   > If only the `command` is used, it is advised to used the shorthand syntax.
+  #   - run:
+  #       background - Boolean - Whether or not this step should run in the background (default: false)
+  #       command - String - Command to run via the shell
+  #       environment - Map - Additional environmental variables, locally scoped to command
+  #       name - String - Title of the step to be shown in the CircleCI UI (default: full command)
+  #       no_output_timeout - String - Elapsed time the command can run without output. The string is a decimal with unit suffix, such as “20m”, “1.25h”, “5s” (default: 10 minutes)
+  #       shell - String - Shell to use for execution command (default: See Default Shell Options)
+  #       when - String - Specify when to enable or disable the step. Takes the following values: always, on_success, on_fail (default: on_success)
+  #       working_directory - String - In which directory to run this step (default: working_directory of the job)
+
+  info:
+    <<: *defaults
+    steps:
+      - run: |-
+          echo "================================================================================"
+          echo "PHP version       : $(php --version)"
+          echo "Running from      : $(which php)"
+          echo "Installed Modules : $(php --modules)"
+          echo "Composer version  : $composer --version)"
+          echo "================================================================================"
+
+  build:
+    <<: *defaults
+    steps:
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: ~/
+          # Must be relative path from root
+          paths:
+            - src/
+            - vendor/
+      #> Checkout project source code into the `working_directory`
+      #> CircleCI does not check out submodules. To do so, use the following run steps:
+      # - checkout
+      # - run: git submodule sync
+      # - run: git submodule update --init
+      - checkout
+
+      #> Restores a previously saved cache based on `key`
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.json" }}
+            #> fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      #> Install dependencies with composer
+      - run: composer install -n --prefer-dist
+
+      #> Generates and stores a cache in the object storage. Later jobs can restore this cache.
+      - save_cache:
+          #> key - String - Unique identifier for this cache. Convenience templated are provided:
+          #>
+          #>    {{ arch }} The OS and CPU information. Useful when caching compiled binaries that depend on OS and CPU architecture, for example, darwin amd64 versus linux i386/32-bit.
+          #>    {{ checksum "filename" }} A base64 encoded SHA256 hash of the given filename’s contents. This should be a file committed in your repo. Good candidates are dependency manifests, such as package.json, pom.xml or project.clj. It’s important that this file does not change between restore_cache and save_cache, otherwise the cache will be saved under a cache key different than the one used at restore_cache time.
+          #>    {{ epoch }} The current time in seconds since the unix epoch.
+          #>    {{ .Branch }} The VCS branch currently being built.
+          #>    {{ .BuildNum }} The CircleCI build number for this build.
+          #>    {{ .CheckoutKey }} The SSH key used to checkout the repo.
+          #>    {{ .Environment.variableName }} The environment variable variableName (supports any environment variable exported by CircleCI or added to a specific Context—not any arbitrary environment variable).
+          #>    {{ .Revision }} The VCS revision currently being built.
+          #>
+          #> Given the immutability of caches, it is advised to start all cache keys
+          #> with a version prefix `v1-`. That way caches can be regenerate by incrementing
+          #> the version of the  prefix.
+          key: v1-dependencies-{{ checksum "composer.json" }}
+          #> paths - List - Directories or files which should be added to the cache
+          paths:
+            - ./vendor
+
+
+  test:
+    <<: *defaults
+
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /tmp/working_directory/build/
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: |
+            if [ -f ./vendor/bin/phpunit ]; then
+               ./vendor/bin/phpunit
+            else
+              phpunit
+            fi
+
+  deploy-prod:
+    docker:
+      - image: dealerdirect/php:5.6
+    steps:
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo '@TODO: Add logic to deploy code from stored artifacts to production environment.'
+            fi
+
+workflows:
+  version: 2
+  build-deploy-master-always:
+    jobs:
+      - build
+
+      #> This job MUST have a tags filters, as it is a dependency of the deploy job.
+      - test:
+          #> @TODO: Instead of requiring the `build` step it should grab vendor from the cache
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+
+      - deploy-prod:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v?[0-9]+\.[0-9]+\.[0-9]+\$/
+
+# EOF
