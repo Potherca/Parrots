@@ -24,10 +24,10 @@ jobs:
 
     steps:
       - run: |-
-        echo "PHP version       : $(php --version)"
-        echo "Running from      : $(which php)"
-        echo "Installed Modules : $(php --modules)"
-        echo "Composer version  : $(composer --version)"
+          echo "PHP version       : $(php --version)"
+          echo "Running from      : $(which php)"
+          echo "Installed Modules : $(php --modules)"
+          echo "Composer version  : $(composer --version)"
       - checkout
       - restore_cache:
           keys:
