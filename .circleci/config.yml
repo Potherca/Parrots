@@ -1,26 +1,39 @@
+---
+#> =============================================================================
 #> PHP CircleCI 2.0 configuration file
 #>
 #> Check https://circleci.com/docs/2.0/language-php/ for more details
 #>
-
+#> -----------------------------------------------------------------------------
 #> Various of these settings are available as environmental variables during a job
 #>
 #> CIRCLE_STAGE = the name of the job
 #> CIRCLE_WORKING_DIRECTORY = working_directory
 #> CIRCLE_JOB="test"
-
-defaults: &defaults
-  working_directory: ~/working_directory
-  docker:
-      #> The docker image to use in this job
-      - image: dealerdirect/php:5.6
+#> =============================================================================
 
 version: 2
 
+#> =============================================================================
+defaults:
+
+  - &job-defaults:
+
+    docker:
+      #> The docker image to use in this job
+      - image: dealerdirect/php:5.6
+
+    working_directory: ~/working_directory
+#> =============================================================================
+
+#> =============================================================================
 #> When using Workflows, jobs MUST have a name unique within this config file.
 #> When NOT using workflows, there MUST be a job named `build`.
 jobs:
 
+  #> ---------------------------------------------------------------------------
+  #> A job can have any name as long as it is unique within this file
+  # a-job-name:
   #> The steps that will be executed on build
   # steps:
   #> Shorthanded command syntax (can also have multiple lines):
@@ -38,19 +51,72 @@ jobs:
   #       when - String - Specify when to enable or disable the step. Takes the following values: always, on_success, on_fail (default: on_success)
   #       working_directory - String - In which directory to run this step (default: working_directory of the job)
 
-  info:
-
-    <<: *defaults
+  #> ---------------------------------------------------------------------------
+  build:
+    <<: *job-defaults
     steps:
       - run: |-
-          echo "PHP version       : $(php --version)"
-          echo "Running from      : $(which php)"
-          echo "Installed Modules : $(php --modules)"
-          echo "Composer version  : $(composer --version)"
+        echo "PHP version       : $(php --version)"
+        echo "Running from      : $(which php)"
+        echo "Installed Modules : $(php --modules)"
+        echo "Composer version  : $(composer --version)"
 
+      #> Checkout project source code into the `working_directory`
+      - checkout
+      #> CircleCI does not check out submodules. To do so, use the following run steps:
+      # - run: git submodule sync
+      # - run: git submodule update --init
+
+      #> Restores a previously saved cache based on `key`
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.lock" }}
+            #> fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: Install dependencies with composer
+          command: |-
+            composer install --prefer-dist --no-progress --no-suggest --verbose --no-interaction
+          # --no-scripts                    # When to run? test? prod?
+          # --no-dev --optimize-autoloader  # Run when a tag is added -> deploy
+
+
+      #> Generates and stores a cache in the object storage. Later jobs can restore this cache.
+      - save_cache:
+          #> key - String - Unique identifier for this cache. Convenience templated are provided:
+          #>
+          #>    {{ arch }} The OS and CPU information. Useful when caching compiled binaries that depend on OS and CPU architecture, for example, darwin amd64 versus linux i386/32-bit.
+          #>    {{ checksum "filename" }} A base64 encoded SHA256 hash of the given filename’s contents. This should be a file committed in your repo. Good candidates are dependency manifests, such as package.json, pom.xml or project.clj. It’s important that this file does not change between restore_cache and save_cache, otherwise the cache will be saved under a cache key different than the one used at restore_cache time.
+          #>    {{ epoch }} The current time in seconds since the unix epoch.
+          #>    {{ .Branch }} The VCS branch currently being built.
+          #>    {{ .BuildNum }} The CircleCI build number for this build.
+          #>    {{ .CheckoutKey }} The SSH key used to checkout the repo.
+          #>    {{ .Environment.variableName }} The environment variable variableName (supports any environment variable exported by CircleCI or added to a specific Context—not any arbitrary environment variable).
+          #>    {{ .Revision }} The VCS revision currently being built.
+          #>
+          #> Given the immutability of caches, it is advised to start all cache keys
+          #> with a version prefix `v1-`. That way caches can be regenerate by incrementing
+          #> the version of the  prefix.
+          key: v1-dependencies-{{ checksum "composer.lock" }}
+          #> paths - List - Directories or files which should be added to the cache
+          paths:
+            - ./vendor
+
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: ~/working_directory
+          # Must be relative path from root
+          paths:
+            - ./
+
+  #> ---------------------------------------------------------------------------
   lint:
-    <<: *defaults
+    <<: *job-defaults
     steps:
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: ~/working_directory
+
       - run:
           name: Lint JSON files
           command: find . -type f -name "*.json" -not -path './vendor/*' -print0 | parallel -0 -n1 jsonlint -q
@@ -96,62 +162,13 @@ jobs:
           name: Security checker
           command: security-checker -n security:check
 
-  build:
-    <<: *defaults
-    steps:
-      #> Checkout project source code into the `working_directory`
-      - checkout
-      #> CircleCI does not check out submodules. To do so, use the following run steps:
-      # - run: git submodule sync
-      # - run: git submodule update --init
-
-      #> Restores a previously saved cache based on `key`
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "composer.lock" }}
-            #> fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-      - run:
-          name: Install dependencies with composer
-          command: |-
-            composer install --prefer-dist --no-progress --no-suggest --verbose --no-interaction
-          # --no-scripts                    # When to run? test? prod?
-          # --no-dev --optimize-autoloader  # Run when a tag is added -> deploy
-
-
-      #> Generates and stores a cache in the object storage. Later jobs can restore this cache.
-      - save_cache:
-          #> key - String - Unique identifier for this cache. Convenience templated are provided:
-          #>
-          #>    {{ arch }} The OS and CPU information. Useful when caching compiled binaries that depend on OS and CPU architecture, for example, darwin amd64 versus linux i386/32-bit.
-          #>    {{ checksum "filename" }} A base64 encoded SHA256 hash of the given filename’s contents. This should be a file committed in your repo. Good candidates are dependency manifests, such as package.json, pom.xml or project.clj. It’s important that this file does not change between restore_cache and save_cache, otherwise the cache will be saved under a cache key different than the one used at restore_cache time.
-          #>    {{ epoch }} The current time in seconds since the unix epoch.
-          #>    {{ .Branch }} The VCS branch currently being built.
-          #>    {{ .BuildNum }} The CircleCI build number for this build.
-          #>    {{ .CheckoutKey }} The SSH key used to checkout the repo.
-          #>    {{ .Environment.variableName }} The environment variable variableName (supports any environment variable exported by CircleCI or added to a specific Context—not any arbitrary environment variable).
-          #>    {{ .Revision }} The VCS revision currently being built.
-          #>
-          #> Given the immutability of caches, it is advised to start all cache keys
-          #> with a version prefix `v1-`. That way caches can be regenerate by incrementing
-          #> the version of the  prefix.
-          key: v1-dependencies-{{ checksum "composer.json" }}
-          #> paths - List - Directories or files which should be added to the cache
-          paths:
-            - ./vendor
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory
-          root: ~/working_directory
-          # Must be relative path from root
-          paths:
-            - ./
-
+  #> ---------------------------------------------------------------------------
   test:
-    <<: *defaults
+    <<: *job-defaults
     steps:
       - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/working_directory
+        # Must be absolute path or relative path from working_directory
+        at: ~/working_directory
       - run: |
           if [ -f ./vendor/bin/phpunit ]; then
              ./vendor/bin/phpunit -c phpunit.xml.dist
@@ -159,48 +176,50 @@ jobs:
             phpunit -c phpunit.xml.dist
           fi
 
+  #> ---------------------------------------------------------------------------
   deploy-prod:
-    docker:
-      - image: dealerdirect/php:5.6
+    <<: *job-defaults
     steps:
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: ~/working_directory
       - deploy:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo '@TODO: Add logic to deploy code from stored artifacts to production environment.'
             fi
+#> =============================================================================
 
+#> =============================================================================
 workflows:
   version: 2
 
   lint:
-      jobs:
-        - info
-        - build
-        - lint:
-            requires:
-              - build
-            filters:
-              tags:
-                only: /.*/
-  build-deploy-master-always:
     jobs:
+
       - build
-      #> This job MUST have a tags filters, as it is a dependency of the deploy job.
-      - test:
-          #> @TODO: Instead of requiring the `build` step it should grab vendor from the cache
+
+      - lint:
           requires:
             - build
           filters:
             tags:
               only: /.*/
 
+      #> This job MUST have a tags filters, as it is a dependency of the deploy job.
+      - test:
+          requires:
+            - build
+
       - deploy-prod:
           requires:
+            - lint
             - test
           filters:
             branches:
               only: master
             tags:
               only: /^v?[0-9]+\.[0-9]+\.[0-9]+\$/
+#> =============================================================================
 
 # EOF
