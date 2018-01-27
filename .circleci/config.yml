@@ -179,14 +179,14 @@ workflows:
 
   lint:
       jobs:
-      - info
-      - build
-      - lint
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
+        - info
+        - build
+        - lint
+            requires:
+              - build
+            filters:
+              tags:
+                only: /.*/
   build-deploy-master-always:
     jobs:
       - build
