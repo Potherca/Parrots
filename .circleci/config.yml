@@ -181,7 +181,7 @@ workflows:
       jobs:
         - info
         - build
-        - lint
+        - lint:
             requires:
               - build
             filters:
