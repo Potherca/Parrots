@@ -41,13 +41,18 @@ jobs:
   info:
     <<: *defaults
     steps:
-      - run: |-
-          echo "================================================================================"
-          echo "PHP version       : $(php --version)"
-          echo "Running from      : $(which php)"
-          echo "Installed Modules : $(php --modules)"
-          echo "Composer version  : $composer --version)"
-          echo "================================================================================"
+      - run:
+          name: PHP version
+          command:  echo "PHP version       : $(php --version)"
+      - run:
+          name: PHP Location
+          command:  echo "Running from      : $(which php)"
+      - run:
+          name: Installed PHP Modules
+          command:  echo "Installed Modules : $(php --modules)"
+      - run:
+          name: Composer version
+          command:  echo "Composer version  : $(composer --version)"
 
   lint:
     <<: *defaults
@@ -70,25 +75,25 @@ jobs:
       - run:
           name: PHP Code Sniffer -- PHPCompatibility
           command: |-
-              phpcs -p -n
-                  --exclude=PHPCompatibility.PHP.DefaultTimezoneRequired
-                  --extensions=php
-                  --ignore="vendor"
-                  --report-full
-                  --report-gitblame
-                  --runtime-set testVersion $(php -r "echo phpversion();" | cut -d"." -f1,2)
-                  --standard=PHPCompatibility
+              phpcs -p -n \
+                  --exclude=PHPCompatibility.PHP.DefaultTimezoneRequired        \
+                  --extensions=php                                              \
+                  --ignore="vendor"                                             \
+                  --report-full                                                 \
+                  --report-gitblame                                             \
+                  --runtime-set testVersion $(php -r "echo phpversion();" | cut -d"." -f1,2)  \
+                  --standard=PHPCompatibility                                   \
                   ./
       - run:
           name: PHP Code Sniffer -- PSR2
           command: |-
-              phpcs -p -s
-                  --encoding=utf8
-                  --extensions=php
-                  --ignore="vendor"
-                  --report-full
-                  --report-gitblame
-                  --standard=PSR2
+              phpcs -p -s                                                       \
+                  --encoding=utf8                                               \
+                  --extensions=php                                              \
+                  --ignore="vendor"                                             \
+                  --report-full                                                 \
+                  --report-gitblame                                             \
+                  --standard=PSR2                                               \
                   ./
       - run:
           name: PHP Mess Detector
@@ -115,8 +120,7 @@ jobs:
       - run:
           name: Install dependencies with composer
           command: |-
-            composer install --prefer-dist
-            --no-progress --no-suggest --verbose --no-interaction
+            composer install --prefer-dist --no-progress --no-suggest --verbose --no-interaction
           # --no-scripts                    # When to run? test? prod?
           # --no-dev --optimize-autoloader  # Run when a tag is added -> deploy
 
