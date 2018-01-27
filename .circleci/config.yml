@@ -1,33 +1,11 @@
 ---
-#> =============================================================================
-#> PHP CircleCI 2.0 configuration file
-#>
-#> Check https://circleci.com/docs/2.0/language-php/ for more details
-#>
-#> -----------------------------------------------------------------------------
-#> Various of these settings are available as environmental variables during a job
-#>
-#> CIRCLE_STAGE = the name of the job
-#> CIRCLE_WORKING_DIRECTORY = working_directory
-#> CIRCLE_JOB="test"
-#> =============================================================================
-
 version: 2
-
 jobs:
   build:
     docker:
-      #> The docker image to use in this job
       - image: dealerdirect/php:5.6
-
     working_directory: ~/working_directory
-
     steps:
-      - run: |-
-          echo "PHP version       : $(php --version)"
-          echo "Running from      : $(which php)"
-          echo "Installed Modules : $(php --modules)"
-          echo "Composer version  : $(composer --version)"
       - checkout
       - restore_cache:
           keys:
@@ -49,18 +27,6 @@ jobs:
           name: Validate Composer file
           command: composer validate
       - run:
-          name: PHP Code Sniffer -- PHPCompatibility
-          command: |-
-              phpcs -p -n \
-                  --exclude=PHPCompatibility.PHP.DefaultTimezoneRequired        \
-                  --extensions=php                                              \
-                  --ignore="vendor"                                             \
-                  --report-full                                                 \
-                  --report-gitblame                                             \
-                  --runtime-set testVersion $(php -r "echo phpversion();" | cut -d"." -f1,2)  \
-                  --standard=PHPCompatibility                                   \
-                  ./
-      - run:
           name: PHP Code Sniffer -- PSR2
           command: |-
               phpcs -p -s                                                       \
@@ -70,10 +36,7 @@ jobs:
                   --report-full                                                 \
                   --report-gitblame                                             \
                   --standard=PSR2                                               \
-                  ./
-      - run:
-          name: PHP Mess Detector
-          command: phpmd ./ text  cleancode codesize controversial design naming unusedcode --exclude vendor,tests
+                  ./ || true
       - run:
           name: Security checker
           command: security-checker -n security:check
@@ -83,11 +46,5 @@ jobs:
           else
             phpunit -c phpunit.xml.dist
           fi
-      - deploy:
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              echo '@TODO: Add logic to deploy code from stored artifacts to production environment.'
-            fi
-#> =============================================================================
 
 # EOF
