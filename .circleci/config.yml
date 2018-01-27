@@ -45,13 +45,6 @@ jobs:
   build:
     <<: *defaults
     steps:
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory
-          root: ~/
-          # Must be relative path from root
-          paths:
-            - src/
-            - vendor/
       #> Checkout project source code into the `working_directory`
       #> CircleCI does not check out submodules. To do so, use the following run steps:
       # - checkout
@@ -67,6 +60,7 @@ jobs:
             - v1-dependencies-
 
       #> Install dependencies with composer
+      #> @TODO: Only run install (and store vendor) if cache if empty
       - run: composer install -n --prefer-dist
 
       #> Generates and stores a cache in the object storage. Later jobs can restore this cache.
@@ -89,7 +83,13 @@ jobs:
           #> paths - List - Directories or files which should be added to the cache
           paths:
             - ./vendor
-
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: /tmp/build/
+          # Must be relative path from root
+          paths:
+            - src/
+            - vendor/
 
   test:
     <<: *defaults
