@@ -54,7 +54,11 @@ jobs:
           command: security-checker -n security:check
       - run:
           name: PHP Mess Detector
-          command: phpmd ./ text  cleancode codesize controversial design naming unusedcode --exclude vendor,tests
+          command: |-
+            phpmd ./ \
+              text  cleancode codesize controversial design naming unusedcode \
+              --exclude vendor,tests \
+              || true
       - run:
           name: Unit Tests (using PHPUnit)
           command: |-
