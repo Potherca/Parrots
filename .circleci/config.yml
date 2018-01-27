@@ -15,6 +15,38 @@
 version: 2
 
 #> =============================================================================
+workflows:
+  version: 2
+
+  lint:
+    jobs:
+
+      - build
+
+      - lint:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+
+      #> This job MUST have a tags filters, as it is a dependency of the deploy job.
+      - test:
+          requires:
+            - build
+
+      - deploy-prod:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v?[0-9]+\.[0-9]+\.[0-9]+\$/
+#> =============================================================================
+
+#> =============================================================================
 defaults:
 
   - &job-defaults:
@@ -188,38 +220,6 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo '@TODO: Add logic to deploy code from stored artifacts to production environment.'
             fi
-#> =============================================================================
-
-#> =============================================================================
-workflows:
-  version: 2
-
-  lint:
-    jobs:
-
-      - build
-
-      - lint:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
-
-      #> This job MUST have a tags filters, as it is a dependency of the deploy job.
-      - test:
-          requires:
-            - build
-
-      - deploy-prod:
-          requires:
-            - lint
-            - test
-          filters:
-            branches:
-              only: master
-            tags:
-              only: /^v?[0-9]+\.[0-9]+\.[0-9]+\$/
 #> =============================================================================
 
 # EOF
