@@ -7,17 +7,17 @@ jobs:
     working_directory: ~/working_directory
     steps:
       - run:
-        name: Information
-        command: |-
-          e='! Not installed'
-          echo "Composer version : $(composer --version || echo "${e}")"
-          echo "NodeJS version   : $(node --version || echo "${e}")"
-          echo "NPM version      : $(npm --version || echo "${e}")"
-          echo "PHP version      : $(php --version || echo "${e}")"
-          echo "Python version   : $(python --version || echo "${e}")"
-          echo "PHP Modules      : $(php --modules || echo "${e}")"
-          echo "Pip packages     : $(pip list || echo "${e}")"
-          echo "NPM packages     : $(npm -g list || echo "${e}")"
+          name: Information
+          command: |-
+            e='! Not installed'
+            echo "Composer version : $(composer --version || echo "${e}")"
+            echo "NodeJS version   : $(node --version || echo "${e}")"
+            echo "NPM version      : $(npm --version || echo "${e}")"
+            echo "PHP version      : $(php --version || echo "${e}")"
+            echo "Python version   : $(python --version || echo "${e}")"
+            echo "PHP Modules      : $(php --modules || echo "${e}")"
+            echo "Pip packages     : $(pip list || echo "${e}")"
+            echo "NPM packages     : $(npm -g list || echo "${e}")"
       - checkout
       - restore_cache:
           keys:
