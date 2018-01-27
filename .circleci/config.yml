@@ -3,24 +3,31 @@
 #> Check https://circleci.com/docs/2.0/language-php/ for more details
 #>
 
+#> Various of these settings are available as environmental variables during a job
+#>
+#> CIRCLE_STAGE = the name of the job
+#> CIRCLE_WORKING_DIRECTORY = working_directory
+#> CIRCLE_JOB="test"
+
 defaults: &defaults
-  working_directory: /tmp/build/
+  working_directory: ~/working_directory
   docker:
       #> The docker image to use in this job
       - image: dealerdirect/php:5.6
 
 version: 2
 
+#> When using Workflows, jobs MUST have a name unique within this config file.
+#> When NOT using workflows, there MUST be a job named `build`.
 jobs:
-  #> When using Workflows, jobs MUST have a name unique within this config file.
-  #> When NOT using workflows, the jobs map MUST contain a job named `build`.
-  # > The steps that will be executed on build
+
+  #> The steps that will be executed on build
   # steps:
-  #   > Shorthanded command syntax (can also have multiple lines):
+  #> Shorthanded command syntax (can also have multiple lines):
   #   - run: echo "hello world"
   #
-  #   > Full command syntax may contain the items below. Only `command` is required.
-  #   > If only the `command` is used, it is advised to used the shorthand syntax.
+  #> Full command syntax may contain the items below. Only `command` is required.
+  #> If only the `command` is used, it is advised to used the shorthand syntax.
   #   - run:
   #       background - Boolean - Whether or not this step should run in the background (default: false)
   #       command - String - Command to run via the shell
@@ -42,26 +49,77 @@ jobs:
           echo "Composer version  : $composer --version)"
           echo "================================================================================"
 
+  lint:
+    <<: *defaults
+    steps:
+      - run:
+          name: Lint JSON files
+          command:find . -type f -name "*.json" -not -path './vendor/*' -print0 | parallel -0 -n1 jsonlint -q
+      - run:
+          name: Lint PHP files
+          command: parallel-lint --exclude vendor .
+      - run:
+          name: Lint YAML files
+          command: find . -type f -name "*.yml"  -not -path './vendor/*' -print0 | parallel -0 -n1 yamllint
+      - run:
+          name: Validate Composer file
+          #> For projects include the lock file (as it should be commited)
+          command: composer validate
+          #> For packages skip the lock file (as none should be commited)
+          # command: composer validate --no-lock
+      - run:
+          name: PHP Code Sniffer -- PHPCompatibility
+          command: |-
+              phpcs -p -n
+                  --exclude=PHPCompatibility.PHP.DefaultTimezoneRequired
+                  --extensions=php
+                  --ignore="vendor"
+                  --report-full
+                  --report-gitblame
+                  --runtime-set testVersion $(php -r "echo phpversion();" | cut -d"." -f1,2)
+                  --standard=PHPCompatibility
+                  ./
+      - run:
+          name: PHP Code Sniffer -- PSR2
+          command: |-
+              phpcs -p -s
+                  --encoding=utf8
+                  --extensions=php
+                  --ignore="vendor"
+                  --report-full
+                  --report-gitblame
+                  --standard=PSR2
+                  ./
+      - run:
+          name: PHP Mess Detector
+          command: phpmd ./ text  cleancode codesize controversial design naming unusedcode --exclude vendor,tests
+      - run:
+          name: Security checker
+          command: security-checker -n security:check
+
   build:
     <<: *defaults
     steps:
       #> Checkout project source code into the `working_directory`
+      - checkout
       #> CircleCI does not check out submodules. To do so, use the following run steps:
-      # - checkout
       # - run: git submodule sync
       # - run: git submodule update --init
-      - checkout
 
       #> Restores a previously saved cache based on `key`
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "composer.json" }}
+            - v1-dependencies-{{ checksum "composer.lock" }}
             #> fallback to using the latest cache if no exact match is found
             - v1-dependencies-
+      - run:
+          name: Install dependencies with composer
+          command: |-
+            composer install --prefer-dist
+            --no-progress --no-suggest --verbose --no-interaction
+          # --no-scripts                    # When to run? test? prod?
+          # --no-dev --optimize-autoloader  # Run when a tag is added -> deploy
 
-      #> Install dependencies with composer
-      #> @TODO: Only run install (and store vendor) if cache if empty
-      - run: composer install -n --prefer-dist
 
       #> Generates and stores a cache in the object storage. Later jobs can restore this cache.
       - save_cache:
@@ -85,7 +143,7 @@ jobs:
             - ./vendor
       - persist_to_workspace:
           # Must be an absolute path, or relative path from working_directory
-          root: /tmp/build/
+          root: ~/working_directory
           # Must be relative path from root
           paths:
             - src/
@@ -93,7 +151,6 @@ jobs:
 
   test:
     <<: *defaults
-
     steps:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
@@ -101,11 +158,11 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run: |
-            if [ -f ./vendor/bin/phpunit ]; then
-               ./vendor/bin/phpunit
-            else
-              phpunit
-            fi
+          if [ -f ./vendor/bin/phpunit ]; then
+             ./vendor/bin/phpunit -c phpunit.xml.dist
+          else
+            phpunit -c phpunit.xml.dist
+          fi
 
   deploy-prod:
     docker:
@@ -119,10 +176,18 @@ jobs:
 
 workflows:
   version: 2
+  lint:
+      jobs:
+      - info
+      - build
+      - lint
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
   build-deploy-master-always:
     jobs:
-      - build
-
       #> This job MUST have a tags filters, as it is a dependency of the deploy job.
       - test:
           #> @TODO: Instead of requiring the `build` step it should grab vendor from the cache
