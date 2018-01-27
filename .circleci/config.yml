@@ -54,7 +54,7 @@ jobs:
     steps:
       - run:
           name: Lint JSON files
-          command:find . -type f -name "*.json" -not -path './vendor/*' -print0 | parallel -0 -n1 jsonlint -q
+          command: find . -type f -name "*.json" -not -path './vendor/*' -print0 | parallel -0 -n1 jsonlint -q
       - run:
           name: Lint PHP files
           command: parallel-lint --exclude vendor .
@@ -176,6 +176,7 @@ jobs:
 
 workflows:
   version: 2
+
   lint:
       jobs:
       - info
@@ -188,6 +189,7 @@ workflows:
               only: /.*/
   build-deploy-master-always:
     jobs:
+      - build
       #> This job MUST have a tags filters, as it is a dependency of the deploy job.
       - test:
           #> @TODO: Instead of requiring the `build` step it should grab vendor from the cache
