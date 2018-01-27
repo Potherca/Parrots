@@ -18,7 +18,7 @@ jobs:
   build:
     docker:
       #> The docker image to use in this job
-      - image: dealerdirect/mpc
+      - image: dealerdirect/php:5.6
 
     working_directory: ~/working_directory
 
@@ -43,14 +43,8 @@ jobs:
           paths:
             - ./vendor
       - run:
-          name: Lint JSON files
-          command: find . -type f -name "*.json" -not -path './vendor/*' -print0 | parallel -0 -n1 jsonlint -q
-      - run:
           name: Lint PHP files
           command: parallel-lint --exclude vendor .
-      - run:
-          name: Lint YAML files
-          command: find . -type f -name "*.yml"  -not -path './vendor/*' -print0 | parallel -0 -n1 yamllint
       - run:
           name: Validate Composer file
           command: composer validate
