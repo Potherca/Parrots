@@ -46,7 +46,7 @@ jobs:
           echo "PHP version       : $(php --version)"
           echo "Running from      : $(which php)"
           echo "Installed Modules : $(php --modules)"
-          echo "Composer version  : $composer --version)"
+          echo "Composer version  : $(composer --version)"
 
   lint:
     <<: *defaults
@@ -144,17 +144,14 @@ jobs:
           root: ~/working_directory
           # Must be relative path from root
           paths:
-            - src/
-            - vendor/
+            - ./
 
   test:
     <<: *defaults
     steps:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: /tmp/working_directory/build/
-      - attach_workspace:
-          at: /tmp/workspace
+          at: ~/working_directory
       - run: |
           if [ -f ./vendor/bin/phpunit ]; then
              ./vendor/bin/phpunit -c phpunit.xml.dist
