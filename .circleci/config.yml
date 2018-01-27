@@ -18,7 +18,7 @@ jobs:
   build:
     docker:
       #> The docker image to use in this job
-      - image: dealerdirect/php:5.6
+      - image: dealerdirect/mpc
 
     working_directory: ~/working_directory
 
