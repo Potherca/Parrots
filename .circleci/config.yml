@@ -57,11 +57,11 @@ jobs:
           command: phpmd ./ text  cleancode codesize controversial design naming unusedcode --exclude vendor,tests
       - run:
           name: Unit Tests (using PHPUnit)
-          command: |
-          if [ -f ./vendor/bin/phpunit ]; then
-             ./vendor/bin/phpunit -c phpunit.xml.dist
-          else
-            phpunit -c phpunit.xml.dist
-          fi
+          command: |-
+            if [ -f ./vendor/bin/phpunit ]; then
+               ./vendor/bin/phpunit -c phpunit.xml.dist
+            else
+              phpunit -c phpunit.xml.dist
+            fi
 
 # EOF
