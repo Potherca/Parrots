@@ -39,20 +39,14 @@ jobs:
   #       working_directory - String - In which directory to run this step (default: working_directory of the job)
 
   info:
+
     <<: *defaults
     steps:
-      - run:
-          name: PHP version
-          command:  echo "PHP version       : $(php --version)"
-      - run:
-          name: PHP Location
-          command:  echo "Running from      : $(which php)"
-      - run:
-          name: Installed PHP Modules
-          command:  echo "Installed Modules : $(php --modules)"
-      - run:
-          name: Composer version
-          command:  echo "Composer version  : $(composer --version)"
+      - run: |-
+          echo "PHP version       : $(php --version)"
+          echo "Running from      : $(which php)"
+          echo "Installed Modules : $(php --modules)"
+          echo "Composer version  : $composer --version)"
 
   lint:
     <<: *defaults
