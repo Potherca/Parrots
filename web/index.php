@@ -2,7 +2,7 @@
 
 namespace Potherca\Parrots;
 
-use Negotiation\FormatNegotiator;
+use Negotiation\Negotiator;
 use PHPTAL;
 use Potherca\Parrots\Transformers\HtmlTransformer;
 use Potherca\Parrots\Transformers\ImageTransformer;
@@ -34,8 +34,9 @@ $aData = getDataFromConfigFile($sConfigFile);
 
 /* Get Type from HEADER */
 if (array_key_exists('HTTP_ACCEPT', $_SERVER)) {
-    $oNegotiator = new FormatNegotiator();
-    $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'])->getValue();
+    $oNegotiator = new Negotiator();
+    $aPriorities   = array('text/html; charset=UTF-8', 'application/json');
+    $aData[Parrots::PROPERTY_TYPE] = $oNegotiator->getBest($_SERVER['HTTP_ACCEPT'], $aPriorities)->getValue();
 }
 
 /* Get Subject from URL */
@@ -102,14 +103,13 @@ function getTransformerFor($p_sType, $p_sRootPath)
 {
     switch ($p_sType) {
         case 'application/json':
+        case 'text/json':
         case 'text/javascript':
             $oTransformer = new JsonTransformer();
             break;
 
         case 'image/png':
             $oTransformer = new ImageTransformer();
-            $oTransformer->setConverter(new ColorConverter());
-            $oTransformer->setSplitter(new TextSplitter());
             break;
 
         case 'application/slack':

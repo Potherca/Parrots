@@ -12,9 +12,9 @@ Simple web service that outputs what it has been given as input with a prefix ad
  Installation
 --------------
 
-1. Clone this repository 
+1. Clone this repository
 2. Run `composer install`
-3. Configure a webserver to host the contents of the `web` directory under a domain root 
+3. Configure a webserver to host the contents of the `web` directory under a domain root
 4. Visit the domain in a browser
 5. Fill out the input field and submit the form
 6. Be amazed by the result
@@ -22,13 +22,16 @@ Simple web service that outputs what it has been given as input with a prefix ad
 Usage
 ----------------
 
-To change the colours or the prefix text, there are two options. 
+To change the colours or the prefix text, there are two options.
 
 The easiest way is simply to edit the `default.json` file in the `config` directory.
 
 A more advanced option is to add a new config file with a name that matches the
 domain Parrots is run on. For exmple, if Parrots is hosted at `http://example.com`,
 create the file `config/example.com.json`
+
+    @TODO: Document all the config settings
+    @TODO: Document GET params: http://jebentzelfeen.website/?subject=bar&prefix=foo&color=white&background-color=black
 
  Other info
 ----------------
@@ -42,8 +45,8 @@ This project has been licensed under [GPL-3.0+ License][GPL-3.0+] (GNU General P
 ### Origin
 
 For a long time, the Dutch website http://jebentzelfeen.nl/ used to offer a
-simple web service that would output what it has been given as input, with the 
-prefix "Je bent zelf een" added. This result could be used as a online retort 
+simple web service that would output what it has been given as input, with the
+prefix "Je bent zelf een" added. This result could be used as a online retort
 for many occasions.
 
 When the service was no-longer available I started to miss it to a degree where
