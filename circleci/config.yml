@@ -1,0 +1,71 @@
+---
+version: 2
+jobs:
+  build:
+    docker:
+      - image: dealerdirect/php:5.6
+    working_directory: ~/working_directory
+    steps:
+      - run:
+          name: Information
+          command: |-
+            e='! Not installed'
+            echo "Composer version : $(composer --version || echo "${e}")"
+            echo "NodeJS version   : $(node --version || echo "${e}")"
+            echo "NPM version      : $(npm --version || echo "${e}")"
+            echo "PHP version      : $(php --version || echo "${e}")"
+            echo "Python version   : $(python --version || echo "${e}")"
+            echo "PHP Modules      : $(php --modules || echo "${e}")"
+            echo "Pip packages     : $(pip list || echo "${e}")"
+            echo "NPM packages     : $(npm -g list || echo "${e}")"
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.lock" }}
+            #> fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: Install PHP dependencies (using Composer)
+          command: |-
+            composer install --no-interaction --no-progress  --no-suggest --prefer-dist --verbose
+      - save_cache:
+          key: v1-dependencies-{{ checksum "composer.lock" }}
+          paths:
+            - ./vendor
+      - run:
+          name: Lint PHP files
+          command: parallel-lint --exclude vendor ./
+      - run:
+          name: Validate Composer
+          command: composer validate
+      - run:
+          name: PHP Code Sniffer -- PSR2
+          command: |-
+              phpcs -p -s                                                       \
+                  --encoding=utf8                                               \
+                  --extensions=php                                              \
+                  --ignore="vendor"                                             \
+                  --report-full                                                 \
+                  --report-gitblame                                             \
+                  --standard=PSR2                                               \
+                  ./ || true
+      - run:
+          name: Security checker
+          command: security-checker -n security:check
+      - run:
+          name: PHP Mess Detector
+          command: |-
+            phpmd ./ \
+              text  cleancode codesize controversial design naming unusedcode \
+              --exclude vendor,tests \
+              || true
+      - run:
+          name: Unit Tests (using PHPUnit)
+          command: |-
+            if [ -f ./vendor/bin/phpunit ]; then
+               ./vendor/bin/phpunit -c phpunit.xml.dist
+            else
+              phpunit -c phpunit.xml.dist
+            fi
+
+# EOF

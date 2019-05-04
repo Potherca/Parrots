@@ -1,0 +1,223 @@
+---
+#> =============================================================================
+#> PHP CircleCI 2.0 configuration file
+#>
+#> Check https://circleci.com/docs/2.0/language-php/ for more details
+#>
+#> -----------------------------------------------------------------------------
+#> Various of these settings are available as environmental variables during a job
+#>
+#> CIRCLE_STAGE = the name of the job
+#> CIRCLE_WORKING_DIRECTORY = working_directory
+#> CIRCLE_JOB="test"
+#> =============================================================================
+
+version: 2
+
+#> =============================================================================
+workflows:
+  version: 2
+
+  lint:
+    jobs:
+      - build
+      - lint:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      #> This job MUST have a tags filters, as it is a dependency of the deploy job.
+      - test:
+          requires:
+            - build
+      - deploy-prod:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v?[0-9]+\.[0-9]+\.[0-9]+\$/
+#> =============================================================================
+
+#> =============================================================================
+defaults:
+
+  - &job-defaults:
+
+    docker:
+      #> The docker image to use in this job
+      - image: dealerdirect/php:5.6
+
+    working_directory: ~/working_directory
+#> =============================================================================
+
+#> =============================================================================
+#> When using Workflows, jobs MUST have a name unique within this config file.
+#> When NOT using workflows, there MUST be a job named `build`.
+jobs:
+
+  #> ---------------------------------------------------------------------------
+  #> A job can have any name as long as it is unique within this file
+  # a-job-name:
+  #> The steps that will be executed on build
+  # steps:
+  #> Shorthanded command syntax (can also have multiple lines):
+  #   - run: echo "hello world"
+  #
+  #> Full command syntax may contain the items below. Only `command` is required.
+  #> If only the `command` is used, it is advised to used the shorthand syntax.
+  #   - run:
+  #       background - Boolean - Whether or not this step should run in the background (default: false)
+  #       command - String - Command to run via the shell
+  #       environment - Map - Additional environmental variables, locally scoped to command
+  #       name - String - Title of the step to be shown in the CircleCI UI (default: full command)
+  #       no_output_timeout - String - Elapsed time the command can run without output. The string is a decimal with unit suffix, such as “20m”, “1.25h”, “5s” (default: 10 minutes)
+  #       shell - String - Shell to use for execution command (default: See Default Shell Options)
+  #       when - String - Specify when to enable or disable the step. Takes the following values: always, on_success, on_fail (default: on_success)
+  #       working_directory - String - In which directory to run this step (default: working_directory of the job)
+
+  #> ---------------------------------------------------------------------------
+  build:
+    <<: *job-defaults
+    steps:
+      - run:
+        name: Information
+        command: |-
+          echo "PHP version       : $(php --version)"
+          echo "Running from      : $(which php)"
+          echo "Installed Modules : $(php --modules)"
+          echo "Composer version  : $(composer --version || echo 'Composer not installed!')"
+
+      #> Checkout project source code into the `working_directory`
+      - checkout
+      #> CircleCI does not check out submodules. To do so, use the following run steps:
+      # - run: git submodule sync
+      # - run: git submodule update --init
+
+      #> Restores a previously saved cache based on `key`
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "composer.lock" }}
+            #> fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: Install dependencies with composer
+          command: |-
+            composer install --prefer-dist --no-progress --no-suggest --verbose --no-interaction
+          # --no-scripts                    # When to run? test? prod?
+          # --no-dev --optimize-autoloader  # Run when a tag is added -> deploy
+
+
+      #> Generates and stores a cache in the object storage. Later jobs can restore this cache.
+      - save_cache:
+          #> key - String - Unique identifier for this cache. Convenience templated are provided:
+          #>
+          #>    {{ arch }} The OS and CPU information. Useful when caching compiled binaries that depend on OS and CPU architecture, for example, darwin amd64 versus linux i386/32-bit.
+          #>    {{ checksum "filename" }} A base64 encoded SHA256 hash of the given filename’s contents. This should be a file committed in your repo. Good candidates are dependency manifests, such as package.json, pom.xml or project.clj. It’s important that this file does not change between restore_cache and save_cache, otherwise the cache will be saved under a cache key different than the one used at restore_cache time.
+          #>    {{ epoch }} The current time in seconds since the unix epoch.
+          #>    {{ .Branch }} The VCS branch currently being built.
+          #>    {{ .BuildNum }} The CircleCI build number for this build.
+          #>    {{ .CheckoutKey }} The SSH key used to checkout the repo.
+          #>    {{ .Environment.variableName }} The environment variable variableName (supports any environment variable exported by CircleCI or added to a specific Context—not any arbitrary environment variable).
+          #>    {{ .Revision }} The VCS revision currently being built.
+          #>
+          #> Given the immutability of caches, it is advised to start all cache keys
+          #> with a version prefix `v1-`. That way caches can be regenerate by incrementing
+          #> the version of the  prefix.
+          key: v1-dependencies-{{ checksum "composer.lock" }}
+          #> paths - List - Directories or files which should be added to the cache
+          paths:
+            - ./vendor
+
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: ~/working_directory
+          # Must be relative path from root
+          paths:
+            - ./
+
+  #> ---------------------------------------------------------------------------
+  lint:
+    <<: *job-defaults
+    steps:
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: ~/working_directory
+
+      - run:
+          name: Lint JSON files
+          command: find . -type f -name "*.json" -not -path './vendor/*' -print0 | parallel -0 -n1 jsonlint -q
+      - run:
+          name: Lint PHP files
+          command: parallel-lint --exclude vendor .
+      - run:
+          name: Lint YAML files
+          command: find . -type f -name "*.yml"  -not -path './vendor/*' -print0 | parallel -0 -n1 yamllint
+      - run:
+          name: Validate Composer file
+          #> For projects include the lock file (as it should be commited)
+          command: composer validate
+          #> For packages skip the lock file (as none should be commited)
+          # command: composer validate --no-lock
+      - run:
+          name: PHP Code Sniffer -- PHPCompatibility
+          command: |-
+              phpcs -p -n \
+                  --exclude=PHPCompatibility.PHP.DefaultTimezoneRequired        \
+                  --extensions=php                                              \
+                  --ignore="vendor"                                             \
+                  --report-full                                                 \
+                  --report-gitblame                                             \
+                  --runtime-set testVersion $(php -r "echo phpversion();" | cut -d"." -f1,2)  \
+                  --standard=PHPCompatibility                                   \
+                  ./
+      - run:
+          name: PHP Code Sniffer -- PSR2
+          command: |-
+              phpcs -p -s                                                       \
+                  --encoding=utf8                                               \
+                  --extensions=php                                              \
+                  --ignore="vendor"                                             \
+                  --report-full                                                 \
+                  --report-gitblame                                             \
+                  --standard=PSR2                                               \
+                  ./
+      - run:
+          name: PHP Mess Detector
+          command: phpmd ./ text  cleancode codesize controversial design naming unusedcode --exclude vendor,tests
+      - run:
+          name: Security checker
+          command: security-checker -n security:check
+
+  #> ---------------------------------------------------------------------------
+  test:
+    <<: *job-defaults
+    steps:
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: ~/working_directory
+      - run: |
+          if [ -f ./vendor/bin/phpunit ]; then
+             ./vendor/bin/phpunit -c phpunit.xml.dist
+          else
+            phpunit -c phpunit.xml.dist
+          fi
+
+  #> ---------------------------------------------------------------------------
+  deploy-prod:
+    <<: *job-defaults
+    steps:
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: ~/working_directory
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo '@TODO: Add logic to deploy code from stored artifacts to production environment.'
+            fi
+#> =============================================================================
+
+# EOF
