@@ -18,10 +18,10 @@
         "stil/gd-text": "~1.0"
     },
     "require-dev": {
-        "jakub-onderka/php-parallel-lint": "0.8.*",
-        "phpunit/phpunit": "~4.5",
-        "pdepend/pdepend": "~2.0",
-        "squizlabs/php_codesniffer": "~2.3"
+        "jakub-onderka/php-parallel-lint": "0.8.0",
+        "phpunit/phpunit": "4.8.36",
+        "pdepend/pdepend": "2.5.2",
+        "squizlabs/php_codesniffer": "2.9.2"
     },
     "autoload": {
         "psr-4" : {
