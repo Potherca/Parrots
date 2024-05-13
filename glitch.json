@@ -1,0 +1,9 @@
+{
+  "install": "composer install --no-dev",
+  "start": "composer start",
+  "watch": {
+    "ignore": [
+      "logs"
+    ]
+  }
+}
