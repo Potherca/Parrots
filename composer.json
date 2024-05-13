@@ -32,5 +32,8 @@
         "psr-4" : {
             "Potherca\\Parrots\\" : "tests/"
         }
-    }
+    },
+    "scripts": {
+        "start": "php -S 0.0.0.0:8080 -t web"
+    }    
 }
